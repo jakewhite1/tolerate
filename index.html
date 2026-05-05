@@ -79,6 +79,12 @@
   ════════════════════════════════════════ -->
   <div id="onboarding-name" class="view">
     <div class="view-content">
+      <div class="nav-bar">
+        <button class="btn-back" onclick="showView('onboarding-tone','back')">
+          <i class="ph-bold ph-arrow-left"></i> Back
+        </button>
+        <div style="width:60px"></div>
+      </div>
       <div class="header">
         <h2>What do people<br>call you?</h2>
         <p class="subtitle" style="margin-top:8px">We'll use this when we remind you.</p>
@@ -98,6 +104,12 @@
   ════════════════════════════════════════ -->
   <div id="onboarding-contact" class="view">
     <div class="view-content">
+      <div class="nav-bar">
+        <button class="btn-back" onclick="showView('onboarding-name','back')">
+          <i class="ph-bold ph-arrow-left"></i> Back
+        </button>
+        <div style="width:60px"></div>
+      </div>
       <div class="header">
         <h2>How do we<br>reach you?</h2>
         <p class="subtitle" style="margin-top:8px">For notifications when reminders fire.</p>
@@ -178,7 +190,9 @@
   <div id="create-friend-nag" class="view">
     <div class="view-content">
       <div class="nav-bar">
-        <button class="btn-back" onclick="goBack()"><i class="ph-bold ph-arrow-left"></i></button>
+        <button class="btn-back" onclick="goBack()">
+          <i class="ph-bold ph-arrow-left"></i> Back
+        </button>
         <h2>Remind Someone</h2>
         <div style="width:60px"></div>
       </div>
@@ -237,7 +251,9 @@
   <div id="share-nag" class="view">
     <div class="view-content centered" style="gap:16px">
       <div class="nav-bar" style="width:100%">
-        <button class="btn-back" onclick="goBack()"><i class="ph-bold ph-arrow-left"></i></button>
+        <button class="btn-back" onclick="goBack()">
+          <i class="ph-bold ph-arrow-left"></i> Back
+        </button>
         <div style="width:60px"></div>
       </div>
       <div class="share-sent-icon"><i class="ph-bold ph-paper-plane-tilt"></i></div>
@@ -263,6 +279,12 @@
   ════════════════════════════════════════ -->
   <div id="friend-landing" class="view">
     <div class="view-content" style="padding-top:calc(var(--safe-top) + 40px)">
+      <div class="nav-bar">
+        <button class="btn-back" onclick="showView('home','back')">
+          <i class="ph-bold ph-house"></i> Home
+        </button>
+        <div style="width:60px"></div>
+      </div>
       <div class="friend-hero">
         <div class="sender-avatar" id="sender-avatar">?</div>
         <p class="friend-from-line" id="friend-from">Someone sent you a reminder</p>
@@ -298,7 +320,9 @@
   <div id="self-nag" class="view">
     <div class="view-content" style="padding-bottom:calc(var(--safe-bottom) + 40px)">
       <div class="nav-bar">
-        <button class="btn-back" onclick="goBack(); stopListening();"><i class="ph-bold ph-arrow-left"></i></button>
+        <button class="btn-back" onclick="goBack(); stopListening();">
+          <i class="ph-bold ph-arrow-left"></i> Back
+        </button>
         <h2>Remind Myself</h2>
         <div style="width:60px"></div>
       </div>
@@ -336,8 +360,13 @@
           <p class="listen-hint">Just talk. We're listening.</p>
         </div>
         <div class="listen-transcript-box">
-          <p class="listen-transcript" id="listen-transcript"></p>
+          <p class="listen-transcript" id="listen-transcript" contenteditable="true"
+             style="outline:none;min-height:24px"></p>
         </div>
+        <button class="btn btn-primary hidden" id="transcript-save-btn"
+          onclick="saveTranscriptAsReminder()" style="margin-top:10px">
+          <i class="ph-bold ph-check"></i> Save this reminder
+        </button>
       </div>
 
       <!-- Captured reminders from mic -->

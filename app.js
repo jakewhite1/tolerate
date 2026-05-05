@@ -730,6 +730,9 @@ let _wakeLock = null;
 
 function _resetMicToggleUI() {
   document.getElementById('listen-area')?.classList.add('hidden');
+  document.getElementById('listen-transcript') && (document.getElementById('listen-transcript').textContent = '');
+  document.getElementById('transcript-save-btn')?.classList.add('hidden');
+  document.getElementById('listen-captured') && (document.getElementById('listen-captured').innerHTML = '');
   const btn = document.getElementById('mic-toggle-btn');
   if (btn) {
     btn.classList.remove('active');
@@ -794,9 +797,18 @@ function runRecognition() {
     const el = document.getElementById('listen-transcript');
     if (el) el.textContent = display;
 
+    // Show/hide the manual save button based on whether there's content
+    const saveBtn = document.getElementById('transcript-save-btn');
+    if (saveBtn) saveBtn.classList.toggle('hidden', !display.trim());
+
     if (final) {
       const extracted = extractNagFromSpeech(final.toLowerCase());
-      if (extracted) autoCaptureReminder(extracted);
+      if (extracted) {
+        autoCaptureReminder(extracted);
+        // Clear transcript and hide save button after auto-capture
+        if (el) el.textContent = '';
+        if (saveBtn) saveBtn.classList.add('hidden');
+      }
     }
   };
 
@@ -879,6 +891,36 @@ function autoCaptureReminder(thing) {
   }
 
   showToast(`Got it — "${thing}"`);
+}
+
+function saveTranscriptAsReminder() {
+  const el = document.getElementById('listen-transcript');
+  const text = (el?.textContent || '').trim();
+  if (!text) return;
+  el.textContent = '';
+  document.getElementById('transcript-save-btn')?.classList.add('hidden');
+
+  createSelfReminder(text, true);
+
+  const list = document.getElementById('listen-captured');
+  if (list) {
+    const item = document.createElement('div');
+    item.className = 'captured-item';
+    item.innerHTML = `
+      <div class="captured-check">✓</div>
+      <div class="captured-text">${esc(text)}</div>
+      <div class="captured-time">just now</div>
+    `;
+    list.prepend(item);
+  }
+
+  const orb = document.getElementById('listen-orb');
+  if (orb) {
+    orb.classList.add('captured');
+    setTimeout(() => orb.classList.remove('captured'), 1200);
+  }
+
+  showToast(`Saved — "${text}"`);
 }
 
 // keep these as no-ops so old HTML refs don't break
