@@ -21,20 +21,20 @@
        SPLASH
   ════════════════════════════════════════ -->
   <div id="splash" class="view">
-    <div class="view-content centered" style="gap:24px; padding-top: calc(var(--safe-top) + 60px);">
-      <div class="logo">T</div>
-      <div>
+    <div class="view-content centered" style="gap:28px; padding-top: calc(var(--safe-top) + 60px);">
+      <div class="logo kinetic-in">T</div>
+      <div class="kinetic-in k-d1">
         <h1 class="app-name">Tolerate</h1>
-        <p class="tagline" style="margin-top:10px">
+        <p class="tagline" style="margin-top:12px">
           Reminders that hit different.<br>For you and the people you tolerate.
         </p>
       </div>
-      <div class="stack" style="width:100%; max-width:320px; margin-top:16px">
+      <div class="stack kinetic-in k-d2" style="width:100%; max-width:320px">
         <button class="btn btn-primary btn-large" onclick="showView('onboarding-tone')">
           This sounds like me
         </button>
       </div>
-      <p class="fine-print" style="margin-top:4px">
+      <p class="fine-print kinetic-in k-d3">
         You will be mildly judged based on your personality choice.
       </p>
     </div>
@@ -51,26 +51,31 @@
           This controls how we talk to you.<br>Choose wisely. Or don't — we'll judge you either way.
         </p>
       </div>
+      <!-- Grids 2.0 — asymmetric broken layout -->
       <div class="tone-grid">
-        <button class="tone-card" onclick="selectTone('sarcastic')" data-tone="sarcastic">
+        <!-- Tall left card — spans 2 rows -->
+        <button class="tone-card tone-card--sarcastic" onclick="selectTone('sarcastic')" data-tone="sarcastic">
           <span class="tone-emoji">🙄</span>
           <span class="tone-name">Sarcastic</span>
-          <span class="tone-sample">"Oh wow, you actually did it."</span>
+          <span class="tone-sample">"Oh wow. You actually did it. Color me shocked."</span>
         </button>
-        <button class="tone-card" onclick="selectTone('warm')" data-tone="warm">
+        <!-- Right column top -->
+        <button class="tone-card tone-card--warm" onclick="selectTone('warm')" data-tone="warm">
           <span class="tone-emoji">🤗</span>
           <span class="tone-name">Warm</span>
-          <span class="tone-sample">"You did it! I'm so proud! 🎉"</span>
+          <span class="tone-sample">"I knew you could!"</span>
         </button>
-        <button class="tone-card" onclick="selectTone('brutal')" data-tone="brutal">
+        <!-- Right column bottom -->
+        <button class="tone-card tone-card--brutal" onclick="selectTone('brutal')" data-tone="brutal">
           <span class="tone-emoji">😤</span>
           <span class="tone-name">Brutal</span>
-          <span class="tone-sample">"Took long enough."</span>
+          <span class="tone-sample">"Finally."</span>
         </button>
-        <button class="tone-card" onclick="selectTone('straight')" data-tone="straight">
+        <!-- Full-width bottom row -->
+        <button class="tone-card tone-card--straight" onclick="selectTone('straight')" data-tone="straight">
           <span class="tone-emoji">📊</span>
           <span class="tone-name">Straight Up</span>
-          <span class="tone-sample">"Done. Marked complete."</span>
+          <span class="tone-sample">"Marked complete. Next."</span>
         </button>
       </div>
     </div>
@@ -136,18 +141,18 @@
         <div class="home-tagline">Time to be insufferable about something important.</div>
       </div>
       <div class="home-actions">
-        <button class="btn-big" onclick="showView('create-friend-nag')">
+        <button class="btn-big btn-big-primary" onclick="showView('create-friend-nag')">
           <div class="btn-big-icon"><i class="ph-bold ph-paper-plane-tilt"></i></div>
           <div>
             <span class="btn-big-label">Remind a Friend</span>
             <span class="btn-big-sub">Send a reminder to someone who needs it</span>
           </div>
         </button>
-        <button class="btn-big btn-big-secondary" onclick="showView('self-nag')">
+        <button class="btn-big" onclick="showView('self-nag')">
           <div class="btn-big-icon"><i class="ph-bold ph-microphone"></i></div>
           <div>
             <span class="btn-big-label">Remind Myself</span>
-            <span class="btn-big-sub">Just say it — we'll catch it</span>
+            <span class="btn-big-sub">Just talk — we'll catch it</span>
           </div>
         </button>
       </div>
@@ -331,18 +336,15 @@
         <div style="width:60px"></div>
       </div>
 
-      <!-- Listening indicator -->
+      <!-- Listening indicator — liquid glass morphing orb -->
       <div class="listen-hero">
         <div class="listen-orb" id="listen-orb">
           <div class="listen-orb-ring"></div>
+          <div class="listen-orb-ring-2"></div>
           <span class="listen-orb-icon"><i class="ph-bold ph-microphone"></i></span>
         </div>
         <p class="listen-status" id="listen-status">Starting…</p>
-        <p class="listen-hint">Just talk normally. Say things like:<br>
-          <span class="listen-example">"Remind me to call the dentist"</span><br>
-          <span class="listen-example">"Before I forget, reply to Jake"</span><br>
-          <span class="listen-example">"I need to remember to pick up milk"</span>
-        </p>
+        <p class="listen-hint">Just talk. We're listening.</p>
       </div>
 
       <!-- Live transcript -->
