@@ -242,8 +242,8 @@ function showView(id, direction = 'forward') {
     const prev = document.getElementById(_currentView);
     if (prev) {
       prev.classList.remove('active');
-      if (direction === 'forward') prev.classList.add('slide-out');
-      setTimeout(() => prev.classList.remove('slide-out'), 340);
+      prev.classList.add('slide-out');
+      setTimeout(() => prev.classList.remove('slide-out'), 350);
     }
     if (direction === 'forward') _viewHistory.push(_currentView);
   }
@@ -338,6 +338,9 @@ function showInstallSheet() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Disable transitions for initial routing so there's no animated flash on load
+  document.body.classList.add('no-transition');
+
   registerSW();
   checkScheduledReminders();
 
@@ -385,6 +388,11 @@ document.addEventListener('DOMContentLoaded', () => {
   } else {
     showView('splash');
   }
+
+  // Re-enable transitions after the initial view is painted
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    document.body.classList.remove('no-transition');
+  }));
 });
 
 function registerSW() {
@@ -463,6 +471,8 @@ async function saveContact() {
   showView('home');
   scheduleAllReminders();
   maybeRequestNotifications();
+  // Personalized welcome on first sign-in
+  setTimeout(() => speak(`${MSG[user.tone].ready} ${msg('greeting', user.tone)}`, user.tone), 700);
 }
 
 async function saveSignup(user) {

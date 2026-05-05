@@ -20,7 +20,7 @@
   <!-- ═══════════════════════════════════════
        SPLASH
   ════════════════════════════════════════ -->
-  <div id="splash" class="view">
+  <div id="splash" class="view active">
     <div class="view-content centered" style="gap:28px; padding-top:calc(var(--safe-top) + 60px)">
       <div class="logo kinetic-in">T</div>
       <div class="kinetic-in k-d1">
@@ -45,6 +45,12 @@
   ════════════════════════════════════════ -->
   <div id="onboarding-tone" class="view">
     <div class="view-content">
+      <div class="nav-bar">
+        <button class="btn-back" onclick="showView('splash','back')">
+          <i class="ph-bold ph-arrow-left"></i> Back
+        </button>
+        <div style="width:44px"></div>
+      </div>
       <div class="header">
         <h2>Pick your personality</h2>
         <p class="subtitle" style="margin-top:8px">This controls how we talk to you.</p>
@@ -83,7 +89,7 @@
         <button class="btn-back" onclick="showView('onboarding-tone','back')">
           <i class="ph-bold ph-arrow-left"></i> Back
         </button>
-        <div style="width:60px"></div>
+        <div style="width:44px"></div>
       </div>
       <div class="header">
         <h2>What do people<br>call you?</h2>
@@ -108,7 +114,7 @@
         <button class="btn-back" onclick="showView('onboarding-name','back')">
           <i class="ph-bold ph-arrow-left"></i> Back
         </button>
-        <div style="width:60px"></div>
+        <div style="width:44px"></div>
       </div>
       <div class="header">
         <h2>How do we<br>reach you?</h2>
@@ -194,7 +200,9 @@
           <i class="ph-bold ph-arrow-left"></i> Back
         </button>
         <h2>Remind Someone</h2>
-        <div style="width:60px"></div>
+        <button class="btn-home" onclick="showView('home','back')" title="Home">
+          <i class="ph-bold ph-house"></i>
+        </button>
       </div>
 
       <div class="form-section">
@@ -254,7 +262,9 @@
         <button class="btn-back" onclick="goBack()">
           <i class="ph-bold ph-arrow-left"></i> Back
         </button>
-        <div style="width:60px"></div>
+        <button class="btn-home" onclick="showView('home','back')" title="Home">
+          <i class="ph-bold ph-house"></i>
+        </button>
       </div>
       <div class="share-sent-icon"><i class="ph-bold ph-paper-plane-tilt"></i></div>
       <h2 id="share-title" style="max-width:280px;text-align:center">Ready to send.</h2>
@@ -281,9 +291,11 @@
     <div class="view-content" style="padding-top:calc(var(--safe-top) + 40px)">
       <div class="nav-bar">
         <button class="btn-back" onclick="showView('home','back')">
-          <i class="ph-bold ph-house"></i> Home
+          <i class="ph-bold ph-arrow-left"></i> Back
         </button>
-        <div style="width:60px"></div>
+        <button class="btn-home" onclick="showView('home','back')" title="Home">
+          <i class="ph-bold ph-house"></i>
+        </button>
       </div>
       <div class="friend-hero">
         <div class="sender-avatar" id="sender-avatar">?</div>
@@ -324,7 +336,9 @@
           <i class="ph-bold ph-arrow-left"></i> Back
         </button>
         <h2>Remind Myself</h2>
-        <div style="width:60px"></div>
+        <button class="btn-home" onclick="showView('home','back'); stopListening();" title="Home">
+          <i class="ph-bold ph-house"></i>
+        </button>
       </div>
 
       <!-- Primary: type the reminder -->
@@ -380,8 +394,11 @@
   <div id="reminders" class="view">
     <div class="view-content no-bottom">
       <div class="nav-bar">
+        <button class="btn-back" onclick="goBack()">
+          <i class="ph-bold ph-arrow-left"></i> Back
+        </button>
         <h2>Reminders</h2>
-        <div style="width:60px"></div>
+        <div style="width:44px"></div>
       </div>
       <div id="reminders-list" class="reminders-list"></div>
     </div>
@@ -392,6 +409,14 @@
   ════════════════════════════════════════ -->
   <div id="reminder-check" class="view">
     <div class="view-content centered" style="gap:24px;min-height:100vh">
+      <div class="nav-bar" style="width:100%;align-self:flex-start">
+        <button class="btn-back" onclick="goBack()">
+          <i class="ph-bold ph-arrow-left"></i> Back
+        </button>
+        <button class="btn-home" onclick="showView('home','back')" title="Home">
+          <i class="ph-bold ph-house"></i>
+        </button>
+      </div>
       <div class="check-icon">⏰</div>
       <h2 class="check-question" id="check-question">Did you do the thing?</h2>
       <p class="check-detail" id="check-detail"></p>
