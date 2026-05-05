@@ -7,12 +7,13 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Tolerate">
   <meta name="theme-color" content="#FF4D00">
-  <meta name="description" content="Nag your friends so they don't have to nag you.">
+  <meta name="description" content="Reminders that hit different.">
   <title>Tolerate</title>
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon.svg">
   <link rel="icon" href="icon.svg">
   <link rel="stylesheet" href="styles.css">
+  <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
 </head>
 <body>
 
@@ -25,7 +26,7 @@
       <div>
         <h1 class="app-name">Tolerate</h1>
         <p class="tagline" style="margin-top:10px">
-          Nag your friends so they<br>don't have to nag you.
+          Reminders that hit different.<br>For you and the people you tolerate.
         </p>
       </div>
       <div class="stack" style="width:100%; max-width:320px; margin-top:16px">
@@ -83,7 +84,7 @@
       <div class="header">
         <h2>What do people<br>call you?</h2>
         <p class="subtitle" style="margin-top:8px">
-          We'll use this when we nag you. Publicly.
+          We'll use this when we remind you. Loudly.
         </p>
       </div>
       <div class="form-section" style="margin-bottom:28px">
@@ -136,17 +137,17 @@
       </div>
       <div class="home-actions">
         <button class="btn-big" onclick="showView('create-friend-nag')">
-          <div class="btn-big-icon">👋</div>
+          <div class="btn-big-icon"><i class="ph-bold ph-paper-plane-tilt"></i></div>
           <div>
-            <span class="btn-big-label">Nag a Friend</span>
+            <span class="btn-big-label">Remind a Friend</span>
             <span class="btn-big-sub">Send a reminder to someone who needs it</span>
           </div>
         </button>
         <button class="btn-big btn-big-secondary" onclick="showView('self-nag')">
-          <div class="btn-big-icon">🎤</div>
+          <div class="btn-big-icon"><i class="ph-bold ph-microphone"></i></div>
           <div>
-            <span class="btn-big-label">Nag Myself</span>
-            <span class="btn-big-sub">Say it before you forget it</span>
+            <span class="btn-big-label">Remind Myself</span>
+            <span class="btn-big-sub">Just say it — we'll catch it</span>
           </div>
         </button>
       </div>
@@ -154,11 +155,11 @@
     </div>
     <nav class="bottom-nav">
       <button class="nav-item active" onclick="showView('home')">
-        <span class="nav-icon">🏠</span>
+        <span class="nav-icon"><i class="ph-bold ph-house"></i></span>
         <span>Home</span>
       </button>
       <button class="nav-item" onclick="showView('reminders')">
-        <span class="nav-icon">🔔</span>
+        <span class="nav-icon"><i class="ph-bold ph-bell"></i></span>
         <span>Reminders</span>
       </button>
     </nav>
@@ -170,8 +171,8 @@
   <div id="create-friend-nag" class="view">
     <div class="view-content">
       <div class="nav-bar">
-        <button class="btn-back" onclick="goBack()">← Back</button>
-        <h2>Nag a Friend</h2>
+        <button class="btn-back" onclick="goBack()"><i class="ph-bold ph-arrow-left"></i></button>
+        <h2>Remind a Friend</h2>
         <div style="width:60px"></div>
       </div>
 
@@ -179,7 +180,7 @@
         <label class="form-label">Their name</label>
         <div style="display:flex;gap:8px;align-items:center">
           <input type="text" id="nag-friend-name" class="input-field" placeholder="What do they go by?" style="flex:1">
-          <button class="btn btn-secondary" id="contacts-btn" onclick="pickContact()" style="width:auto;padding:0 14px;height:52px;white-space:nowrap;font-size:20px" title="Pick from contacts">📒</button>
+          <button class="btn btn-secondary" id="contacts-btn" onclick="pickContact()" style="width:auto;padding:0 16px;height:52px;white-space:nowrap;font-size:22px" title="Pick from contacts"><i class="ph-bold ph-address-book"></i></button>
         </div>
       </div>
 
@@ -215,20 +216,20 @@
   <div id="share-nag" class="view">
     <div class="view-content centered" style="gap:18px">
       <div class="nav-bar" style="width:100%">
-        <button class="btn-back" onclick="goBack()">← Back</button>
+        <button class="btn-back" onclick="goBack()"><i class="ph-bold ph-arrow-left"></i></button>
         <div style="width:60px"></div>
       </div>
-      <div class="share-icon">💬</div>
+      <div class="share-icon"><i class="ph-bold ph-paper-plane-tilt"></i></div>
       <h2 id="share-title" style="max-width:280px">Ready to send.</h2>
       <p id="share-subtitle" class="subtitle" style="max-width:280px">
         Send this to them. What they do with it is between them and their conscience.
       </p>
       <div class="stack" style="width:100%">
         <button class="btn btn-primary btn-large" id="btn-text-friend" onclick="textFriend()">
-          💬 Open in Messages
+          <i class="ph-bold ph-chat-circle-text"></i> Open in Messages
         </button>
         <button class="btn btn-secondary" onclick="shareNag()">
-          Share via…
+          <i class="ph-bold ph-share-network"></i> Share via…
         </button>
         <button class="btn btn-ghost" onclick="copyNagLink()">
           Copy link
@@ -249,7 +250,7 @@
   <div id="friend-landing" class="view">
     <div class="view-content">
       <div class="friend-header" style="margin-top:16px">
-        <span class="friend-icon">👋</span>
+        <span class="friend-icon"><i class="ph-bold ph-hand-waving"></i></span>
         <h2 id="friend-from">Someone sent you something.</h2>
       </div>
 
@@ -275,7 +276,7 @@
       </div>
 
       <p class="fine-print" style="text-align:center; margin-top:20px; padding-bottom:40px">
-        Tolerate — nag your friends so they don't have to nag you.
+        Tolerate — reminders that hit different.
       </p>
     </div>
   </div>
@@ -286,7 +287,7 @@
   <div id="self-nag" class="view">
     <div class="view-content" style="padding-bottom: calc(var(--safe-bottom) + 40px)">
       <div class="nav-bar">
-        <button class="btn-back" onclick="goBack(); stopListening();">← Back</button>
+        <button class="btn-back" onclick="goBack(); stopListening();"><i class="ph-bold ph-arrow-left"></i></button>
         <h2>Listening</h2>
         <div style="width:60px"></div>
       </div>
@@ -295,7 +296,7 @@
       <div class="listen-hero">
         <div class="listen-orb" id="listen-orb">
           <div class="listen-orb-ring"></div>
-          <span class="listen-orb-icon">🎤</span>
+          <span class="listen-orb-icon"><i class="ph-bold ph-microphone"></i></span>
         </div>
         <p class="listen-status" id="listen-status">Starting…</p>
         <p class="listen-hint">Just talk normally. Say things like:<br>
@@ -335,7 +336,7 @@
   <div id="reminders" class="view">
     <div class="view-content no-bottom">
       <div class="nav-bar">
-        <button class="btn-back" onclick="goBack()">← Back</button>
+        <button class="btn-back" onclick="goBack()"><i class="ph-bold ph-arrow-left"></i></button>
         <h2>Reminders</h2>
         <div style="width:60px"></div>
       </div>

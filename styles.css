@@ -385,6 +385,20 @@ p { line-height: 1.55; }
 .captured-text { flex: 1; font-size: 15px; font-weight: 600; color: var(--text); }
 .captured-time { font-size: 12px; color: var(--text-3); white-space: nowrap; }
 
+/* ── Phosphor Icons ── */
+.ph-bold, .ph, .ph-fill { line-height: 1; }
+.nav-icon .ph-bold { font-size: 24px; display: block; }
+.btn-big-icon .ph-bold { font-size: 28px; color: var(--primary); }
+.btn-big-secondary .btn-big-icon .ph-bold { color: var(--text-2); }
+.btn-back .ph-bold { font-size: 20px; }
+.btn .ph-bold { font-size: 18px; vertical-align: middle; margin-right: 6px; }
+.share-icon .ph-bold { font-size: 52px; display: block; color: var(--primary); }
+.friend-icon .ph-bold { font-size: 60px; display: block; color: var(--text); }
+.listen-orb-icon .ph-bold { font-size: 40px; color: var(--primary); }
+.listen-orb.listening .listen-orb-icon .ph-bold { color: var(--primary); }
+.listen-orb.captured .listen-orb-icon .ph-bold { color: var(--success); }
+#contacts-btn .ph-bold { font-size: 22px; }
+
 /* ── Utils ── */
 .hidden { display: none !important; }
 .stack { display: flex; flex-direction: column; gap: 10px; width: 100%; }
