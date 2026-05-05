@@ -19,15 +19,49 @@ const SHEETS_URL = '';
 // ─────────────────────────────────────────────
 // TEXT-TO-SPEECH
 // ─────────────────────────────────────────────
+// Voice personalities — ordered best-to-fallback per platform
 const VOICE_CFG = {
-  sarcastic: { names: ['Karen','Victoria','Tessa','Fiona','Google UK English Female'], rate: 0.86, pitch: 0.82 },
-  warm:      { names: ['Samantha','Moira','Veena','Google US English Female'],         rate: 1.0,  pitch: 1.18 },
-  brutal:    { names: ['Alex','Daniel','Fred','Google UK English Male'],               rate: 1.08, pitch: 0.72 },
-  straight:  { names: ['Samantha','Google US English','Nicky'],                        rate: 1.0,  pitch: 1.0  },
+  sarcastic: {
+    // UK female: dry, slightly flat
+    names: ['Karen','Moira','Fiona','Tessa','Victoria',
+            'Google UK English Female','Microsoft Hazel','Microsoft Susan',
+            'en-GB-Standard-A','en-GB'],
+    rate: 0.88, pitch: 0.78,
+  },
+  warm: {
+    // US female: bright, higher pitch
+    names: ['Samantha','Ava','Allison','Susan','Nicky',
+            'Google US English Female','Microsoft Zira','Microsoft Eva',
+            'en-US-Standard-C','en-US'],
+    rate: 1.02, pitch: 1.22,
+  },
+  brutal: {
+    // UK or AU male: deep, fast
+    names: ['Alex','Daniel','Fred','Arthur','Gordon','Bruce',
+            'Google UK English Male','Microsoft David','Microsoft Mark',
+            'en-GB-Standard-B','en-AU'],
+    rate: 1.12, pitch: 0.68,
+  },
+  straight: {
+    // Neutral US: no-frills
+    names: ['Tom','Samantha','Google US English','Microsoft Mark','Nicky',
+            'en-US-Standard-B','en-US'],
+    rate: 1.0, pitch: 1.0,
+  },
 };
 
-// iOS Safari blocks speech unless called from a direct user tap.
-// We prime on first interaction, then flush any queued speech.
+// Cache voices once loaded — Chrome needs the voiceschanged event
+let _cachedVoices = [];
+function _loadVoices() {
+  const v = window.speechSynthesis?.getVoices() || [];
+  if (v.length) _cachedVoices = v;
+}
+if (window.speechSynthesis) {
+  window.speechSynthesis.onvoiceschanged = _loadVoices;
+  _loadVoices();
+}
+
+// iOS Safari blocks speech unless triggered by a direct user tap.
 let _speechPrimed = false;
 let _pendingSpeech = null;
 
@@ -36,10 +70,8 @@ document.addEventListener('click', _primeSpeech, { capture: true, once: false })
 function _primeSpeech() {
   if (_speechPrimed || !window.speechSynthesis) return;
   _speechPrimed = true;
-  // Fire a silent utterance to unlock the audio context
   const unlock = new SpeechSynthesisUtterance('');
   window.speechSynthesis.speak(unlock);
-  // Flush anything queued before priming
   if (_pendingSpeech) {
     const { text, tone, onEnd } = _pendingSpeech;
     _pendingSpeech = null;
@@ -49,22 +81,25 @@ function _primeSpeech() {
 
 function speak(text, tone, onEnd) {
   if (!window.speechSynthesis || !text) { onEnd?.(); return; }
-  if (!_speechPrimed) {
-    // Queue it — will fire on next user tap
-    _pendingSpeech = { text, tone, onEnd };
-    return;
-  }
+  if (!_speechPrimed) { _pendingSpeech = { text, tone, onEnd }; return; }
   _doSpeak(text, tone, onEnd);
 }
 
 function _doSpeak(text, tone, onEnd) {
   const synth = window.speechSynthesis;
   synth.cancel();
-
-  // Always get fresh voices — iOS returns them synchronously, Chrome needs the event
-  const voices = synth.getVoices();
+  _loadVoices();
+  const voices = _cachedVoices.length ? _cachedVoices : synth.getVoices();
   const cfg = VOICE_CFG[tone] || VOICE_CFG.straight;
-  const voice = voices.find(v => cfg.names.some(n => v.name.startsWith(n)));
+
+  // Try each preferred name in order until we find a match
+  let voice = null;
+  for (const name of cfg.names) {
+    voice = voices.find(v => v.name === name)
+         || voices.find(v => v.name.startsWith(name))
+         || voices.find(v => v.lang.startsWith(name));
+    if (voice) break;
+  }
 
   const utt = new SpeechSynthesisUtterance(text);
   if (voice) utt.voice = voice;
@@ -72,8 +107,6 @@ function _doSpeak(text, tone, onEnd) {
   utt.pitch  = cfg.pitch;
   utt.volume = 1;
   if (onEnd) utt.onend = onEnd;
-
-  // iOS sometimes stalls — kick it after 50ms if needed
   synth.speak(utt);
   setTimeout(() => { if (synth.paused) synth.resume(); }, 50);
 }
@@ -231,7 +264,8 @@ function showView(id, direction = 'forward') {
   // View-specific init
   if (id === 'home') renderHome();
   if (id === 'reminders') renderReminders();
-  if (id === 'self-nag') setTimeout(startListening, 400);
+  // self-nag: mic is opt-in — user taps the toggle to activate
+  if (id === 'self-nag') _resetMicToggleUI();
   if (id !== 'self-nag' && _listeningActive) stopListening();
 }
 
@@ -247,12 +281,74 @@ function goBack() {
 // ─────────────────────────────────────────────
 // INIT
 // ─────────────────────────────────────────────
+// ─────────────────────────────────────────────
+// INSTALL PROMPT (Add to Home Screen)
+// ─────────────────────────────────────────────
+let _installPrompt = null;
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  _installPrompt = e;
+  // Show install card on home once it's visible
+  document.getElementById('install-card')?.classList.remove('hidden');
+});
+
+window.addEventListener('appinstalled', () => {
+  document.getElementById('install-card')?.classList.add('hidden');
+  _installPrompt = null;
+});
+
+async function installApp() {
+  if (_installPrompt) {
+    _installPrompt.prompt();
+    const { outcome } = await _installPrompt.userChoice;
+    if (outcome === 'accepted') _installPrompt = null;
+    return;
+  }
+  // iOS Safari — no prompt API, show manual instructions
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  if (isIOS) {
+    showInstallSheet();
+  } else {
+    showToast('Open in Chrome or Safari and use browser menu → Add to Home Screen');
+  }
+}
+
+function showInstallSheet() {
+  const existing = document.getElementById('ios-install-sheet');
+  if (existing) { existing.remove(); return; }
+  const sheet = document.createElement('div');
+  sheet.id = 'ios-install-sheet';
+  sheet.className = 'install-sheet';
+  sheet.innerHTML = `
+    <div class="install-sheet-inner">
+      <div class="install-sheet-handle"></div>
+      <div style="font-size:40px;margin-bottom:8px">📲</div>
+      <div style="font-size:20px;font-weight:800;margin-bottom:12px;letter-spacing:-0.5px">Add to Home Screen</div>
+      <ol class="install-steps">
+        <li>Tap the <strong>Share</strong> button <span style="font-size:18px">⬆</span> at the bottom of Safari</li>
+        <li>Scroll down and tap <strong>"Add to Home Screen"</strong></li>
+        <li>Tap <strong>Add</strong> — done</li>
+      </ol>
+      <button class="btn btn-primary" style="margin-top:20px" onclick="document.getElementById('ios-install-sheet').remove()">Got it</button>
+    </div>
+  `;
+  sheet.addEventListener('click', e => { if (e.target === sheet) sheet.remove(); });
+  document.body.appendChild(sheet);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   registerSW();
   checkScheduledReminders();
+
   // Show contact picker button only where the API is actually supported
   if ('contacts' in navigator && 'ContactsManager' in window) {
     document.getElementById('contact-picker-btn')?.classList.remove('hidden');
+  }
+
+  // If already installed as PWA, hide install card
+  if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+    document.getElementById('install-card')?.classList.add('hidden');
   }
 
   const params = new URLSearchParams(location.search);
@@ -393,7 +489,25 @@ function renderHome() {
   const greetEl = document.getElementById('home-greeting');
   if (greetEl) greetEl.textContent = msg('greeting', user.tone);
 
+  // Highlight active tone in switcher
+  document.querySelectorAll('.tone-pill').forEach(p => {
+    p.classList.toggle('active', p.dataset.tone === user.tone);
+  });
+
   renderRemindersPreview();
+}
+
+function switchTone(tone) {
+  const s = getState();
+  if (!s.user) return;
+  setState({ user: { ...s.user, tone } });
+  // Immediately refresh greeting and highlight
+  const greetEl = document.getElementById('home-greeting');
+  if (greetEl) greetEl.textContent = msg('greeting', tone);
+  document.querySelectorAll('.tone-pill').forEach(p => {
+    p.classList.toggle('active', p.dataset.tone === tone);
+  });
+  speak(MSG[tone].tone_confirm, tone);
 }
 
 function renderRemindersPreview() {
@@ -427,39 +541,35 @@ function setFrequency(freq) {
 function generateNag() {
   const friendName = document.getElementById('nag-friend-name').value.trim();
   const thing = document.getElementById('nag-thing').value.trim();
-  if (!friendName) { showToast('Enter your friend\'s name'); return; }
-  if (!thing) { showToast('What do they keep forgetting?'); return; }
+  if (!friendName) { showToast('Enter their name first'); return; }
+  if (!thing)       { showToast('What should they remember?'); return; }
 
   _currentFriendName = friendName;
-  _currentNagPhone = document.getElementById('nag-phone').value.trim();
+  _currentNagPhone   = document.getElementById('nag-phone').value.trim();
 
   const { user } = getState();
   const senderName = user?.name || 'Someone';
-  const tone = user?.tone || 'straight';
+  const tone       = user?.tone || 'straight';
 
   const params = new URLSearchParams({
-    nag: '1',
-    from: senderName,
-    friend: friendName,
-    what: thing,
-    freq: _nagFrequency,
-    tone,
+    nag: '1', from: senderName, friend: friendName, what: thing,
+    freq: _nagFrequency, tone,
   });
-
   _currentShareLink = `${location.origin}${location.pathname}?${params}`;
 
-  document.getElementById('share-title').textContent = msg('nag_created', tone);
-  document.getElementById('share-subtitle').textContent = msg('nag_sent', tone);
-  document.getElementById('share-link-text').textContent = _currentShareLink;
-
-  // Update Messages button label based on whether we have a number
-  const msgBtn = document.getElementById('btn-text-friend');
-  if (msgBtn) {
-    msgBtn.textContent = _currentNagPhone
-      ? `💬 Text ${friendName}`
-      : '💬 Open in Messages';
+  // If we have a phone number, go straight to Messages — no extra screen
+  if (_currentNagPhone) {
+    textFriend();
+    showView('home');
+    showToast(msg('nag_sent', tone));
+    return;
   }
 
+  // No phone — show share screen so they can copy/share the link
+  document.getElementById('share-title').textContent    = msg('nag_created', tone);
+  document.getElementById('share-subtitle').textContent = msg('nag_sent', tone);
+  const msgBtn = document.getElementById('btn-text-friend');
+  if (msgBtn) msgBtn.innerHTML = '<i class="ph-bold ph-chat-circle-text"></i> Open in Messages';
   showView('share-nag');
 }
 
@@ -618,7 +728,39 @@ const NAG_TRIGGERS = [
 let _listeningActive = false;
 let _wakeLock = null;
 
-// showView hooks for self-nag are handled inside showView itself (see routing section)
+function _resetMicToggleUI() {
+  document.getElementById('listen-area')?.classList.add('hidden');
+  const btn = document.getElementById('mic-toggle-btn');
+  if (btn) {
+    btn.classList.remove('active');
+    document.getElementById('mic-toggle-label').textContent = 'Use microphone';
+  }
+  const status = document.getElementById('listen-status');
+  if (status) status.textContent = 'Ready';
+}
+
+function toggleListening() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { showToast('Speech recognition not supported in this browser'); return; }
+
+  if (_listeningActive) {
+    stopListening();
+    document.getElementById('listen-area')?.classList.add('hidden');
+    const btn = document.getElementById('mic-toggle-btn');
+    if (btn) {
+      btn.classList.remove('active');
+      document.getElementById('mic-toggle-label').textContent = 'Use microphone';
+    }
+  } else {
+    document.getElementById('listen-area')?.classList.remove('hidden');
+    const btn = document.getElementById('mic-toggle-btn');
+    if (btn) {
+      btn.classList.add('active');
+      document.getElementById('mic-toggle-label').textContent = 'Stop microphone';
+    }
+    startListening();
+  }
+}
 
 async function startListening() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -677,7 +819,13 @@ function stopListening() {
   _listeningActive = false;
   if (_micRecognition) { _micRecognition.stop(); _micRecognition = null; }
   if (_wakeLock) { _wakeLock.release?.(); _wakeLock = null; }
-  setListenStatus('Stopped', false);
+  setListenStatus('Ready', false);
+  const btn = document.getElementById('mic-toggle-btn');
+  if (btn) {
+    btn.classList.remove('active');
+    const lbl = document.getElementById('mic-toggle-label');
+    if (lbl) lbl.textContent = 'Use microphone';
+  }
 }
 
 function setListenStatus(text, active) {

@@ -975,6 +975,101 @@ p  { line-height: 1.55; }
 .listen-orb.captured .listen-orb-icon .ph-bold { color: var(--success); }
 #contacts-btn .ph-bold { font-size: 22px; }
 
+/* ══ MIC TOGGLE BUTTON (self-nag) ══ */
+.mic-toggle-btn {
+  width: 100%; padding: 15px 18px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-md);
+  color: var(--text-2); font-size: 15px; font-weight: 600;
+  cursor: pointer; touch-action: manipulation;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  transition: all 0.45s var(--spring);
+  box-shadow: var(--neu-up); margin-bottom: 0;
+}
+.mic-toggle-btn:active { transform: scale(0.96); transition: transform 0.06s; }
+.mic-toggle-btn.active {
+  background: var(--primary-bg);
+  border-color: rgba(255,77,0,0.4);
+  color: var(--primary);
+  box-shadow: 0 0 0 1px rgba(255,77,0,0.2), 0 4px 18px rgba(255,77,0,0.18);
+}
+.mic-toggle-btn .ph-bold { font-size: 20px; }
+
+.listen-area { margin-top: 4px; }
+
+/* ══ TONE SWITCHER PILLS (home screen) ══ */
+.tone-switcher { display: flex; gap: 8px; flex-wrap: wrap; }
+.tone-pill {
+  padding: 9px 15px; border-radius: 100px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  color: var(--text-2); font-size: 13px; font-weight: 600;
+  cursor: pointer; touch-action: manipulation; white-space: nowrap;
+  transition: all 0.45s var(--spring);
+  box-shadow: var(--neu-up);
+}
+.tone-pill:active { transform: scale(0.91); transition: transform 0.06s; }
+.tone-pill.active {
+  background: var(--primary-bg);
+  border-color: rgba(255,77,0,0.4);
+  color: var(--primary);
+  box-shadow: 0 0 0 1px rgba(255,77,0,0.2), 0 4px 18px rgba(255,77,0,0.22);
+  transform: scale(1.04);
+}
+
+/* ══ INSTALL CARD ══ */
+.install-card {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 14px; padding: 18px 20px; margin-top: 20px;
+  background: var(--glass);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r-xl);
+  box-shadow: inset 0 1px 0 var(--glass-sheen), 0 8px 28px rgba(0,0,0,0.35);
+}
+.install-card-left { display: flex; align-items: center; gap: 14px; flex: 1; }
+.install-card-icon { font-size: 28px; flex-shrink: 0; }
+.install-card-title { font-size: 15px; font-weight: 700; letter-spacing: -0.3px; margin-bottom: 2px; }
+.install-card-sub { font-size: 12px; color: var(--text-3); }
+.install-card-btn {
+  padding: 10px 20px; border-radius: 100px;
+  background: var(--primary); color: #fff; border: none;
+  font-size: 14px; font-weight: 700; cursor: pointer;
+  touch-action: manipulation; white-space: nowrap;
+  transition: transform 0.45s var(--spring), box-shadow 0.2s;
+  box-shadow: 0 4px 18px rgba(255,77,0,0.35);
+}
+.install-card-btn:active {
+  transform: scale(0.92) translate(2px,2px);
+  box-shadow: 0 1px 6px rgba(255,77,0,0.3);
+  transition: all 0.06s;
+}
+
+/* ══ iOS INSTALL BOTTOM SHEET ══ */
+.install-sheet {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(0,0,0,0.72);
+  display: flex; align-items: flex-end;
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+}
+.install-sheet-inner {
+  background: var(--surface); border-radius: 24px 24px 0 0;
+  padding: 24px 24px calc(var(--safe-bottom) + 28px);
+  width: 100%; text-align: center;
+}
+.install-sheet-handle {
+  width: 36px; height: 4px; border-radius: 2px;
+  background: var(--surface-3); margin: 0 auto 20px;
+}
+.install-steps {
+  text-align: left; padding-left: 22px; list-style: decimal;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.install-steps li { font-size: 16px; color: var(--text-2); line-height: 1.45; }
+.install-steps strong { color: var(--text); }
+
 /* ══ UTILS ══ */
 .hidden { display: none !important; }
 .stack { display: flex; flex-direction: column; gap: 10px; width: 100%; }

@@ -1,4 +1,4 @@
-const CACHE = 'tolerate-v4';
+const CACHE = 'tolerate-v5';
 const ASSETS = ['./', './index.html', './styles.css', './app.js', './manifest.json', './icon.svg'];
 
 self.addEventListener('install', e => {

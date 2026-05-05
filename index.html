@@ -146,8 +146,28 @@
         </button>
       </div>
 
+      <!-- Tone switcher -->
+      <div class="tone-switcher" style="margin-top:24px">
+        <button class="tone-pill" data-tone="sarcastic" onclick="switchTone('sarcastic')">🙄 Sarcastic</button>
+        <button class="tone-pill" data-tone="warm"      onclick="switchTone('warm')">🤗 Warm</button>
+        <button class="tone-pill" data-tone="brutal"    onclick="switchTone('brutal')">😤 Brutal</button>
+        <button class="tone-pill" data-tone="straight"  onclick="switchTone('straight')">📊 Straight</button>
+      </div>
+
       <!-- Active reminders preview -->
-      <div id="reminders-preview"></div>
+      <div id="reminders-preview" style="margin-top:28px"></div>
+
+      <!-- Install nudge — shown by JS when the browser offers an install prompt -->
+      <div id="install-card" class="install-card hidden">
+        <div class="install-card-left">
+          <div class="install-card-icon">📲</div>
+          <div>
+            <div class="install-card-title">Add to Home Screen</div>
+            <div class="install-card-sub">One tap away, always</div>
+          </div>
+        </div>
+        <button class="install-card-btn" onclick="installApp()">Install</button>
+      </div>
 
     </div>
   </div>
@@ -233,9 +253,8 @@
         <button class="btn btn-ghost" onclick="copyNagLink()">Copy link</button>
         <button class="btn btn-ghost" onclick="showView('home')">Done</button>
       </div>
-      <div class="share-link-box" style="width:100%">
-        <p id="share-link-text" class="share-link"></p>
-      </div>
+      <!-- link text kept hidden for clipboard fallback, not shown to user -->
+      <p id="share-link-text" style="display:none"></p>
     </div>
   </div>
 
@@ -274,42 +293,55 @@
   </div>
 
   <!-- ═══════════════════════════════════════
-       SELF NAG — listening mode
+       SELF NAG — type or mic
   ════════════════════════════════════════ -->
   <div id="self-nag" class="view">
     <div class="view-content" style="padding-bottom:calc(var(--safe-bottom) + 40px)">
       <div class="nav-bar">
         <button class="btn-back" onclick="goBack(); stopListening();"><i class="ph-bold ph-arrow-left"></i></button>
-        <h2>Listening</h2>
+        <h2>Remind Myself</h2>
         <div style="width:60px"></div>
       </div>
 
-      <div class="listen-hero">
-        <div class="listen-orb" id="listen-orb">
-          <div class="listen-orb-ring"></div>
-          <div class="listen-orb-ring-2"></div>
-          <span class="listen-orb-icon"><i class="ph-bold ph-microphone"></i></span>
-        </div>
-        <p class="listen-status" id="listen-status">Starting…</p>
-        <p class="listen-hint">Just talk. We're listening.</p>
-      </div>
-
-      <div class="listen-transcript-box">
-        <p class="listen-transcript" id="listen-transcript"></p>
-      </div>
-
-      <div id="listen-captured" class="listen-captured"></div>
-
-      <div class="manual-nag-section" style="margin-top:24px">
-        <p class="separator-text" style="margin-bottom:12px">or type it</p>
+      <!-- Primary: type the reminder -->
+      <div class="form-section" style="margin-bottom:14px">
+        <label class="form-label">What do you need to remember?</label>
         <div style="display:flex;gap:8px">
           <input type="text" id="manual-nag-input" class="input-field"
-            placeholder="What do you need to remember?"
+            placeholder="Call the dentist, pick up groceries…"
             style="flex:1"
             onkeydown="if(event.key==='Enter') createManualSelfNag()">
-          <button class="btn btn-primary" onclick="createManualSelfNag()" style="width:auto;padding:0 20px">+</button>
+          <button class="btn btn-primary" onclick="createManualSelfNag()"
+            style="width:auto;padding:0 22px;flex-shrink:0">
+            <i class="ph-bold ph-plus"></i>
+          </button>
         </div>
       </div>
+
+      <!-- Mic toggle — secondary option -->
+      <button class="mic-toggle-btn" id="mic-toggle-btn" onclick="toggleListening()">
+        <i class="ph-bold ph-microphone" id="mic-toggle-icon"></i>
+        <span id="mic-toggle-label">Use microphone</span>
+      </button>
+
+      <!-- Mic area — hidden until user taps the toggle -->
+      <div class="listen-area hidden" id="listen-area">
+        <div class="listen-hero" style="padding:24px 0 16px">
+          <div class="listen-orb" id="listen-orb">
+            <div class="listen-orb-ring"></div>
+            <div class="listen-orb-ring-2"></div>
+            <span class="listen-orb-icon"><i class="ph-bold ph-microphone"></i></span>
+          </div>
+          <p class="listen-status" id="listen-status">Ready</p>
+          <p class="listen-hint">Just talk. We're listening.</p>
+        </div>
+        <div class="listen-transcript-box">
+          <p class="listen-transcript" id="listen-transcript"></p>
+        </div>
+      </div>
+
+      <!-- Captured reminders from mic -->
+      <div id="listen-captured" class="listen-captured" style="margin-top:16px"></div>
     </div>
   </div>
 
