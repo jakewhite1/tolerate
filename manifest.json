@@ -1,0 +1,18 @@
+{
+  "name": "Tolerate",
+  "short_name": "Tolerate",
+  "description": "Nag your friends so they don't have to nag you.",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0A0A0A",
+  "theme_color": "#FF4D00",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
