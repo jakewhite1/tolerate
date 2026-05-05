@@ -122,6 +122,8 @@ let _nagFrequency = 'once';
 let _currentCheckId = null;
 let _micRecognition = null;
 let _currentShareLink = '';
+let _currentNagPhone = '';
+let _currentFriendName = '';
 
 function showView(id, direction = 'forward') {
   const next = document.getElementById(id);
@@ -305,6 +307,9 @@ function generateNag() {
   if (!friendName) { showToast('Enter your friend\'s name'); return; }
   if (!thing) { showToast('What do they keep forgetting?'); return; }
 
+  _currentFriendName = friendName;
+  _currentNagPhone = document.getElementById('nag-phone').value.trim();
+
   const { user } = getState();
   const senderName = user?.name || 'Someone';
   const tone = user?.tone || 'straight';
@@ -324,7 +329,42 @@ function generateNag() {
   document.getElementById('share-subtitle').textContent = msg('nag_sent', tone);
   document.getElementById('share-link-text').textContent = _currentShareLink;
 
+  // Update Messages button label based on whether we have a number
+  const msgBtn = document.getElementById('btn-text-friend');
+  if (msgBtn) {
+    msgBtn.textContent = _currentNagPhone
+      ? `💬 Text ${friendName}`
+      : '💬 Open in Messages';
+  }
+
   showView('share-nag');
+}
+
+async function pickContact() {
+  if (!('contacts' in navigator && 'ContactsManager' in window)) {
+    showToast('Contact picker not supported — enter name & number manually');
+    return;
+  }
+  try {
+    const contacts = await navigator.contacts.select(['name', 'tel'], { multiple: false });
+    if (!contacts.length) return;
+    const c = contacts[0];
+    if (c.name?.[0]) document.getElementById('nag-friend-name').value = c.name[0];
+    if (c.tel?.[0]) document.getElementById('nag-phone').value = c.tel[0];
+  } catch {
+    showToast('Could not open contacts');
+  }
+}
+
+function textFriend() {
+  const { user } = getState();
+  const senderName = user?.name || 'Someone';
+  const phone = _currentNagPhone.replace(/\D/g, '');
+  const body = `Hey ${_currentFriendName}! ${senderName} wants to make sure you don't forget:\n\n"${document.getElementById('nag-thing')?.value || ''}"\n\nSet a reminder here → ${_currentShareLink}`;
+  const smsUrl = phone
+    ? `sms:${phone}&body=${encodeURIComponent(body)}`
+    : `sms:&body=${encodeURIComponent(body)}`;
+  window.location.href = smsUrl;
 }
 
 async function shareNag() {

@@ -177,12 +177,20 @@
 
       <div class="form-section">
         <label class="form-label">Their name</label>
-        <input type="text" id="nag-friend-name" class="input-field" placeholder="What do they go by?">
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="text" id="nag-friend-name" class="input-field" placeholder="What do they go by?" style="flex:1">
+          <button class="btn btn-secondary" id="contacts-btn" onclick="pickContact()" style="width:auto;padding:0 14px;height:52px;white-space:nowrap;font-size:20px" title="Pick from contacts">📒</button>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <label class="form-label">Their phone number <span style="font-weight:400;text-transform:none;letter-spacing:0">(so we can open Messages for you)</span></label>
+        <input type="tel" id="nag-phone" class="input-field" placeholder="(555) 000-0000" autocomplete="tel">
       </div>
 
       <div class="form-section">
         <label class="form-label">What do they keep forgetting?</label>
-        <textarea id="nag-thing" class="textarea-field" rows="4"
+        <textarea id="nag-thing" class="textarea-field" rows="3"
           placeholder="e.g. Reply to messages, call their mom, submit that thing…"></textarea>
       </div>
 
@@ -196,7 +204,7 @@
       </div>
 
       <div style="margin-top:8px">
-        <button class="btn btn-primary btn-large" onclick="generateNag()">Generate nag link →</button>
+        <button class="btn btn-primary btn-large" onclick="generateNag()">Next →</button>
       </div>
     </div>
   </div>
@@ -210,24 +218,27 @@
         <button class="btn-back" onclick="goBack()">← Back</button>
         <div style="width:60px"></div>
       </div>
-      <div class="share-icon">🔗</div>
-      <h2 id="share-title" style="max-width:280px">Link ready.</h2>
+      <div class="share-icon">💬</div>
+      <h2 id="share-title" style="max-width:280px">Ready to send.</h2>
       <p id="share-subtitle" class="subtitle" style="max-width:280px">
         Send this to them. What they do with it is between them and their conscience.
       </p>
-      <div class="share-link-box" style="width:100%">
-        <p id="share-link-text" class="share-link"></p>
-      </div>
       <div class="stack" style="width:100%">
-        <button class="btn btn-primary btn-large" onclick="shareNag()">
-          Share Link
+        <button class="btn btn-primary btn-large" id="btn-text-friend" onclick="textFriend()">
+          💬 Open in Messages
         </button>
-        <button class="btn btn-secondary" onclick="copyNagLink()">
-          Copy Link
+        <button class="btn btn-secondary" onclick="shareNag()">
+          Share via…
+        </button>
+        <button class="btn btn-ghost" onclick="copyNagLink()">
+          Copy link
         </button>
         <button class="btn btn-ghost" onclick="showView('home')">
           Back to home
         </button>
+      </div>
+      <div class="share-link-box" style="width:100%;margin-top:4px">
+        <p id="share-link-text" class="share-link"></p>
       </div>
     </div>
   </div>
