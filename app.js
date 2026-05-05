@@ -19,13 +19,6 @@ const SHEETS_URL = '';
 // ─────────────────────────────────────────────
 // TEXT-TO-SPEECH
 // ─────────────────────────────────────────────
-let _voices = [];
-function _loadVoices() { _voices = window.speechSynthesis?.getVoices() || []; }
-if (window.speechSynthesis) {
-  _loadVoices();
-  window.speechSynthesis.addEventListener('voiceschanged', _loadVoices);
-}
-
 const VOICE_CFG = {
   sarcastic: { names: ['Karen','Victoria','Tessa','Fiona','Google UK English Female'], rate: 0.86, pitch: 0.82 },
   warm:      { names: ['Samantha','Moira','Veena','Google US English Female'],         rate: 1.0,  pitch: 1.18 },
@@ -33,14 +26,45 @@ const VOICE_CFG = {
   straight:  { names: ['Samantha','Google US English','Nicky'],                        rate: 1.0,  pitch: 1.0  },
 };
 
+// iOS Safari blocks speech unless called from a direct user tap.
+// We prime on first interaction, then flush any queued speech.
+let _speechPrimed = false;
+let _pendingSpeech = null;
+
+document.addEventListener('click', _primeSpeech, { capture: true, once: false });
+
+function _primeSpeech() {
+  if (_speechPrimed || !window.speechSynthesis) return;
+  _speechPrimed = true;
+  // Fire a silent utterance to unlock the audio context
+  const unlock = new SpeechSynthesisUtterance('');
+  window.speechSynthesis.speak(unlock);
+  // Flush anything queued before priming
+  if (_pendingSpeech) {
+    const { text, tone, onEnd } = _pendingSpeech;
+    _pendingSpeech = null;
+    setTimeout(() => _doSpeak(text, tone, onEnd), 150);
+  }
+}
+
 function speak(text, tone, onEnd) {
   if (!window.speechSynthesis || !text) { onEnd?.(); return; }
+  if (!_speechPrimed) {
+    // Queue it — will fire on next user tap
+    _pendingSpeech = { text, tone, onEnd };
+    return;
+  }
+  _doSpeak(text, tone, onEnd);
+}
+
+function _doSpeak(text, tone, onEnd) {
   const synth = window.speechSynthesis;
   synth.cancel();
-  if (!_voices.length) _voices = synth.getVoices();
 
+  // Always get fresh voices — iOS returns them synchronously, Chrome needs the event
+  const voices = synth.getVoices();
   const cfg = VOICE_CFG[tone] || VOICE_CFG.straight;
-  const voice = _voices.find(v => cfg.names.some(n => v.name.startsWith(n)));
+  const voice = voices.find(v => cfg.names.some(n => v.name.startsWith(n)));
 
   const utt = new SpeechSynthesisUtterance(text);
   if (voice) utt.voice = voice;
@@ -48,7 +72,10 @@ function speak(text, tone, onEnd) {
   utt.pitch  = cfg.pitch;
   utt.volume = 1;
   if (onEnd) utt.onend = onEnd;
+
+  // iOS sometimes stalls — kick it after 50ms if needed
   synth.speak(utt);
+  setTimeout(() => { if (synth.paused) synth.resume(); }, 50);
 }
 
 // ─────────────────────────────────────────────
