@@ -360,11 +360,16 @@ function textFriend() {
   const { user } = getState();
   const senderName = user?.name || 'Someone';
   const phone = _currentNagPhone.replace(/\D/g, '');
-  const body = `Hey ${_currentFriendName}! ${senderName} wants to make sure you don't forget:\n\n"${document.getElementById('nag-thing')?.value || ''}"\n\nSet a reminder here → ${_currentShareLink}`;
+  const thing = document.getElementById('nag-thing')?.value || '';
+  const body = `Hey ${_currentFriendName}! ${senderName} wants to make sure you don't forget:\n\n"${thing}"\n\nSet a reminder here → ${_currentShareLink}`;
   const smsUrl = phone
     ? `sms:${phone}&body=${encodeURIComponent(body)}`
     : `sms:&body=${encodeURIComponent(body)}`;
-  window.location.href = smsUrl;
+  const a = document.createElement('a');
+  a.href = smsUrl;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }
 
 async function shareNag() {
