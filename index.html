@@ -281,44 +281,50 @@
   </div>
 
   <!-- ═══════════════════════════════════════
-       SELF NAG
+       SELF NAG — always-on listening mode
   ════════════════════════════════════════ -->
   <div id="self-nag" class="view">
-    <div class="view-content">
+    <div class="view-content" style="padding-bottom: calc(var(--safe-bottom) + 40px)">
       <div class="nav-bar">
-        <button class="btn-back" onclick="goBack(); stopMic();">← Back</button>
-        <h2>Nag Myself</h2>
+        <button class="btn-back" onclick="goBack(); stopListening();">← Back</button>
+        <h2>Listening</h2>
         <div style="width:60px"></div>
       </div>
 
-      <div class="mic-area" style="margin: 24px 0 32px">
-        <button class="mic-btn" id="mic-btn" onclick="toggleMic()">
-          <span id="mic-icon">🎤</span>
-        </button>
-        <p class="mic-hint" id="mic-hint">
-          Tap and say something like<br>"Before I forget, call the dentist"
-        </p>
-        <p class="mic-transcript" id="mic-transcript"></p>
-      </div>
-
-      <div id="detected-nag" class="detected-nag hidden">
-        <div class="detected-label">Got it:</div>
-        <div id="detected-thing" class="detected-thing"></div>
-        <div class="detected-actions">
-          <button class="btn btn-primary" onclick="confirmSelfNag()">Set reminder</button>
-          <button class="btn btn-ghost" onclick="retryMic()">Try again</button>
+      <!-- Listening indicator -->
+      <div class="listen-hero">
+        <div class="listen-orb" id="listen-orb">
+          <div class="listen-orb-ring"></div>
+          <span class="listen-orb-icon">🎤</span>
         </div>
+        <p class="listen-status" id="listen-status">Starting…</p>
+        <p class="listen-hint">Just talk normally. Say things like:<br>
+          <span class="listen-example">"Remind me to call the dentist"</span><br>
+          <span class="listen-example">"Before I forget, reply to Jake"</span><br>
+          <span class="listen-example">"I need to remember to pick up milk"</span>
+        </p>
       </div>
 
-      <div class="manual-nag-section" style="margin-top:16px">
-        <p class="separator-text" style="text-align:center; margin-bottom:12px">or just type it</p>
-        <input
-          type="text" id="manual-nag-input" class="input-field"
-          placeholder="What do you need to remember?"
-          style="margin-bottom:10px"
-          onkeydown="if(event.key==='Enter') createManualSelfNag()"
-        >
-        <button class="btn btn-secondary" onclick="createManualSelfNag()">Add reminder</button>
+      <!-- Live transcript -->
+      <div class="listen-transcript-box" id="listen-transcript-box">
+        <p class="listen-transcript" id="listen-transcript"></p>
+      </div>
+
+      <!-- Captured reminders list -->
+      <div id="listen-captured" class="listen-captured"></div>
+
+      <!-- Manual fallback -->
+      <div class="manual-nag-section" style="margin-top:24px">
+        <p class="separator-text" style="margin-bottom:12px">or type it</p>
+        <div style="display:flex;gap:8px">
+          <input
+            type="text" id="manual-nag-input" class="input-field"
+            placeholder="What do you need to remember?"
+            style="flex:1"
+            onkeydown="if(event.key==='Enter') createManualSelfNag()"
+          >
+          <button class="btn btn-primary" onclick="createManualSelfNag()" style="width:auto;padding:0 18px">+</button>
+        </div>
       </div>
     </div>
   </div>

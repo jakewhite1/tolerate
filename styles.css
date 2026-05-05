@@ -333,6 +333,58 @@ p { line-height: 1.55; }
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+/* ── Always-on Listening UI ── */
+.listen-hero {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 18px; padding: 20px 0 28px; text-align: center;
+}
+.listen-orb {
+  width: 120px; height: 120px; border-radius: 50%;
+  background: var(--surface); position: relative;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.4s;
+}
+.listen-orb.listening { background: var(--primary-bg); }
+.listen-orb.captured { background: var(--success-bg); }
+.listen-orb-ring {
+  position: absolute; inset: -8px; border-radius: 50%;
+  border: 2px solid transparent;
+  transition: border-color 0.3s;
+}
+.listen-orb.listening .listen-orb-ring {
+  border-color: var(--primary);
+  animation: spin-pulse 2s ease-in-out infinite;
+}
+.listen-orb.captured .listen-orb-ring { border-color: var(--success); }
+@keyframes spin-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(1.06); }
+}
+.listen-orb-icon { font-size: 44px; position: relative; z-index: 1; }
+.listen-status { font-size: 15px; font-weight: 600; color: var(--text-2); }
+.listen-hint { font-size: 14px; color: var(--text-3); line-height: 1.8; }
+.listen-example { display: block; font-style: italic; }
+
+.listen-transcript-box {
+  min-height: 48px; background: var(--surface);
+  border-radius: var(--r-md); padding: 14px 16px; margin-bottom: 16px;
+}
+.listen-transcript { font-size: 16px; color: var(--text-2); line-height: 1.5; min-height: 24px; }
+
+.listen-captured { display: flex; flex-direction: column; gap: 8px; }
+.captured-item {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--success-bg); border-radius: var(--r-md); padding: 14px 16px;
+  animation: slide-in 0.3s ease;
+}
+@keyframes slide-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.captured-check { font-size: 16px; color: var(--success); flex-shrink: 0; }
+.captured-text { flex: 1; font-size: 15px; font-weight: 600; color: var(--text); }
+.captured-time { font-size: 12px; color: var(--text-3); white-space: nowrap; }
+
 /* ── Utils ── */
 .hidden { display: none !important; }
 .stack { display: flex; flex-direction: column; gap: 10px; width: 100%; }

@@ -146,6 +146,8 @@ function showView(id, direction = 'forward') {
   // View-specific init
   if (id === 'home') renderHome();
   if (id === 'reminders') renderReminders();
+  if (id === 'self-nag') setTimeout(startListening, 400);
+  if (id !== 'self-nag' && _listeningActive) stopListening();
 }
 
 function goBack() {
@@ -477,74 +479,89 @@ function dismissNag() {
 // SELF NAG
 // ─────────────────────────────────────────────
 const NAG_TRIGGERS = [
-  'don\'t let me forget', 'dont let me forget',
-  'before i forget', 'i need to remember to', 'remind me to',
-  'i need to remember', 'need to remember', 'don\'t forget to',
-  'dont forget to', 'make sure i',
+  "don't let me forget", "dont let me forget",
+  "before i forget", "i need to remember to", "remind me to",
+  "i need to remember", "need to remember", "don't forget to",
+  "dont forget to", "make sure i", "i should remember to",
+  "i have to remember to", "i gotta remember to",
+  "note to self", "mental note",
 ];
 
-function toggleMic() {
-  if (_micRecognition) {
-    stopMic();
-  } else {
-    startMic();
-  }
-}
+let _listeningActive = false;
+let _wakeLock = null;
 
-function startMic() {
+// showView hooks for self-nag are handled inside showView itself (see routing section)
+
+async function startListening() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) {
-    showToast('Speech recognition not supported on this browser');
+    setListenStatus('Speech recognition not supported in this browser', false);
     return;
   }
 
+  _listeningActive = true;
+  setListenStatus('Listening…', true);
+  acquireWakeLock();
+  runRecognition();
+}
+
+function runRecognition() {
+  if (!_listeningActive) return;
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   _micRecognition = new SR();
   _micRecognition.continuous = true;
   _micRecognition.interimResults = true;
   _micRecognition.lang = 'en-US';
 
-  const btn = document.getElementById('mic-btn');
-  const hint = document.getElementById('mic-hint');
-  const transcript = document.getElementById('mic-transcript');
-
-  btn.classList.add('listening');
-  hint.textContent = 'Listening… say something like "Before I forget, call the dentist"';
-
   _micRecognition.onresult = (e) => {
-    let interim = '';
-    let final = '';
+    let interim = '', final = '';
     for (let i = e.resultIndex; i < e.results.length; i++) {
       const t = e.results[i][0].transcript;
       if (e.results[i].isFinal) final += t;
       else interim += t;
     }
-    const text = (final || interim).toLowerCase().trim();
-    transcript.textContent = final || interim;
+    const display = final || interim;
+    const el = document.getElementById('listen-transcript');
+    if (el) el.textContent = display;
 
-    const extracted = extractNagFromSpeech(text);
-    if (extracted) {
-      stopMic();
-      showDetectedNag(extracted);
+    if (final) {
+      const extracted = extractNagFromSpeech(final.toLowerCase());
+      if (extracted) autoCaptureReminder(extracted);
     }
   };
 
-  _micRecognition.onerror = () => stopMic();
-  _micRecognition.onend = () => {
-    if (_micRecognition) stopMic();
+  _micRecognition.onerror = (e) => {
+    if (e.error === 'not-allowed') {
+      setListenStatus('Microphone access denied', false);
+      _listeningActive = false;
+    }
   };
 
-  _micRecognition.start();
+  _micRecognition.onend = () => {
+    // Restart automatically — keeps listening forever
+    if (_listeningActive) setTimeout(runRecognition, 200);
+  };
+
+  try { _micRecognition.start(); } catch {}
 }
 
-function stopMic() {
-  if (_micRecognition) {
-    _micRecognition.stop();
-    _micRecognition = null;
-  }
-  const btn = document.getElementById('mic-btn');
-  const hint = document.getElementById('mic-hint');
-  if (btn) btn.classList.remove('listening');
-  if (hint) hint.textContent = 'Tap and say something like\n"Before I forget, call the dentist"';
+function stopListening() {
+  _listeningActive = false;
+  if (_micRecognition) { _micRecognition.stop(); _micRecognition = null; }
+  if (_wakeLock) { _wakeLock.release?.(); _wakeLock = null; }
+  setListenStatus('Stopped', false);
+}
+
+function setListenStatus(text, active) {
+  const el = document.getElementById('listen-status');
+  const orb = document.getElementById('listen-orb');
+  if (el) el.textContent = text;
+  if (orb) orb.classList.toggle('listening', active);
+}
+
+async function acquireWakeLock() {
+  if (!('wakeLock' in navigator)) return;
+  try { _wakeLock = await navigator.wakeLock.request('screen'); } catch {}
 }
 
 function extractNagFromSpeech(text) {
@@ -552,30 +569,48 @@ function extractNagFromSpeech(text) {
     const idx = text.indexOf(trigger);
     if (idx !== -1) {
       const after = text.slice(idx + trigger.length).trim();
-      if (after.length > 2) return after.replace(/^(to\s+)?/, '');
+      if (after.length > 2) return after.replace(/^to\s+/, '');
     }
   }
   return null;
 }
 
-function showDetectedNag(thing) {
-  document.getElementById('detected-thing').textContent = thing;
-  document.getElementById('detected-nag').classList.remove('hidden');
-  document.getElementById('mic-transcript').textContent = '';
-  document.getElementById('mic-btn').style.opacity = '0.4';
+function autoCaptureReminder(thing) {
+  // Clear transcript
+  const transcriptEl = document.getElementById('listen-transcript');
+  if (transcriptEl) transcriptEl.textContent = '';
+
+  createSelfReminder(thing, true);
+
+  // Add to the captured list in the UI
+  const list = document.getElementById('listen-captured');
+  if (list) {
+    const item = document.createElement('div');
+    item.className = 'captured-item';
+    item.innerHTML = `
+      <div class="captured-check">✓</div>
+      <div class="captured-text">${esc(thing)}</div>
+      <div class="captured-time">just now</div>
+    `;
+    list.prepend(item);
+  }
+
+  // Flash the orb green briefly
+  const orb = document.getElementById('listen-orb');
+  if (orb) {
+    orb.classList.add('captured');
+    setTimeout(() => orb.classList.remove('captured'), 1200);
+  }
+
+  showToast(`Got it — "${thing}"`);
 }
 
-function retryMic() {
-  document.getElementById('detected-nag').classList.add('hidden');
-  document.getElementById('mic-btn').style.opacity = '1';
-  document.getElementById('mic-transcript').textContent = '';
-}
-
-function confirmSelfNag() {
-  const thing = document.getElementById('detected-thing').textContent.trim();
-  if (!thing) return;
-  createSelfReminder(thing);
-}
+// keep these as no-ops so old HTML refs don't break
+function toggleMic() {}
+function stopMic() {}
+function showDetectedNag() {}
+function retryMic() {}
+function confirmSelfNag() {}
 
 function createManualSelfNag() {
   const thing = document.getElementById('manual-nag-input').value.trim();
@@ -584,15 +619,17 @@ function createManualSelfNag() {
   createSelfReminder(thing);
 }
 
-function createSelfReminder(thing) {
+function createSelfReminder(thing, silent = false) {
   const reminder = createReminderObj({ thing, frequency: 'once', type: 'self' });
   addReminder(reminder);
   scheduleReminder(reminder);
-  const tone = getState().user?.tone;
-  showView('home');
-  showToast(tone === 'sarcastic' ? 'Sure, I\'ll remember. Since you won\'t.' :
-            tone === 'brutal' ? 'Set. Don\'t mess this up.' :
-            tone === 'warm' ? 'Got it! I\'ll remind you! 💛' : 'Reminder set.');
+  if (!silent) {
+    const tone = getState().user?.tone;
+    showView('home');
+    showToast(tone === 'sarcastic' ? "Sure, I'll remember. Since you won't." :
+              tone === 'brutal' ? "Set. Don't mess this up." :
+              tone === 'warm' ? "Got it! I'll remind you! 💛" : 'Reminder set.');
+  }
 }
 
 // ─────────────────────────────────────────────
