@@ -561,11 +561,18 @@ p  { line-height: 1.55; }
     var(--bg);
 }
 .home-header { margin-bottom: 36px; }
-.home-greeting {
-  font-size: 38px; font-weight: 800; letter-spacing: -1.5px; margin-bottom: 8px;
-  background: linear-gradient(145deg, #FFFFFF 20%, rgba(255,255,255,0.6) 100%);
+/* Name — large and dominant */
+.home-name {
+  font-size: 42px; font-weight: 900; letter-spacing: -2px; line-height: 1;
+  background: linear-gradient(145deg, #FFFFFF 30%, rgba(255,255,255,0.6) 100%);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   background-clip: text;
+  margin-bottom: 6px;
+}
+/* Personality greeting — secondary, changes every visit */
+.home-greeting {
+  font-size: 17px; font-weight: 500; color: var(--text-2); line-height: 1.4;
+  letter-spacing: -0.2px;
 }
 .home-tagline { font-size: 15px; color: var(--text-2); line-height: 1.5; }
 .home-actions { display: flex; flex-direction: column; gap: 12px; }

@@ -90,6 +90,7 @@ const MSG = {
     contact_prompt: "How do we reach you? We'll try to keep it brief. No promises.",
     ready:          "Alright, let's see how long this lasts.",
     install_nudge:  "Install the app if you want reminders when you're too busy ignoring things.",
+    greeting:       ["Back again?", "Still forgetting things, I see.", "Oh look who showed up.", "Couldn't manage without me?", "Back. Already.", "You again.", "Well. Here we are."],
     nag_created:    ["Bold of you to assume they'll actually do it.", "Reminder set. We'll see.", "Done. Don't get excited.", "Set. Miracles can happen."],
     nag_sent:       ["Link generated. Your move.", "Link ready. Good luck.", "Sent. Ball's in their court. Mostly.", "Link made. Time will tell."],
     friend_greeting:["Hey {friend}! {from} sent you a reminder. Draw your own conclusions.", "Oh look, {from} remembered you might forget. Touching.", "{from} is thinking about you. Or just thinks you're forgetful."],
@@ -106,6 +107,7 @@ const MSG = {
     contact_prompt: "How can we reach you? We promise to only send good vibes.",
     ready:          "You're all set! Let's do this!",
     install_nudge:  "Install the app for the best experience! It only takes a second.",
+    greeting:       ["So good to see you!", "You came back! That makes me happy.", "Hey you! Ready to crush it?", "Welcome back! Let's get things done.", "I was hoping you'd stop by!", "Here to be amazing again?"],
     nag_created:    ["You're such a good friend for looking out for them!", "Love that you're helping them out!", "That's so thoughtful of you!", "Look at you being a great friend!"],
     nag_sent:       ["Link ready! They're lucky to have you.", "On its way! You're amazing.", "Done! You're such a good person.", "Ready to share! You're the best."],
     friend_greeting:["Hey {friend}! Your friend {from} is thinking of you.", "Hi {friend}! {from} wanted to make sure you're okay.", "Hey! {from} sent a little reminder your way."],
@@ -122,6 +124,7 @@ const MSG = {
     contact_prompt: "Email or phone. Pick one. We don't have all day.",
     ready:          "Fine. Let's see if you can actually follow through.",
     install_nudge:  "Install the app. Or don't. But then stop complaining about forgetting things.",
+    greeting:       ["You're here. Good.", "Back. Let's go.", "What do you need.", "Present. Now act like it.", "About time.", "Still at it. Fine."],
     nag_created:    ["Don't hold your breath. But hey, you tried.", "Set. We'll see if it matters.", "Done. Time will tell.", "Reminder made. Brace yourself."],
     nag_sent:       ["Sent. Whether it works is on them.", "Link out. Low expectations set.", "Gone. Prepare for disappointment.", "Done. Hope springs eternal."],
     friend_greeting:["{from} has decided you need a reminder. Hard to argue with.", "You forgot, and {from} knew you would.", "{from} is doing your memory's job for you."],
@@ -138,6 +141,7 @@ const MSG = {
     contact_prompt: 'Enter your email or phone number.',
     ready:          'Setup complete.',
     install_nudge:  'Install the app for background notifications.',
+    greeting:       ['Welcome back.', 'Active.', 'Ready.', 'Session started.', 'Back online.'],
     nag_created:    ['Reminder link created.', 'Reminder set.', 'Done.', 'Saved.'],
     nag_sent:       ['Link ready to share.', 'Link created.', 'Ready.', 'Done.'],
     friend_greeting:['{from} sent you a reminder.', 'Reminder from {from}.', '{from} wants you to remember something.'],
@@ -194,6 +198,9 @@ let _currentShareLink = '';
 let _currentNagPhone = '';
 let _currentFriendName = '';
 
+// Views that show the persistent bottom nav
+const _NAV_VIEWS = new Set(['home', 'reminders']);
+
 function showView(id, direction = 'forward') {
   const next = document.getElementById(id);
   if (!next) return;
@@ -212,11 +219,19 @@ function showView(id, direction = 'forward') {
   _currentView = id;
   next.scrollTop = 0;
 
+  // Global bottom nav — show only on home/reminders, update active item
+  const nav = document.querySelector('.bottom-nav');
+  if (nav) {
+    nav.classList.toggle('hidden', !_NAV_VIEWS.has(id));
+    nav.querySelectorAll('.nav-item').forEach(item => {
+      item.classList.toggle('active', item.dataset.view === id);
+    });
+  }
+
   // View-specific init
   if (id === 'home') renderHome();
   if (id === 'reminders') renderReminders();
   if (id === 'self-nag') setTimeout(startListening, 400);
-  if (id === 'create-friend-nag') resetWizard();
   if (id !== 'self-nag' && _listeningActive) stopListening();
 }
 
@@ -235,6 +250,10 @@ function goBack() {
 document.addEventListener('DOMContentLoaded', () => {
   registerSW();
   checkScheduledReminders();
+  // Show contact picker button only where the API is actually supported
+  if ('contacts' in navigator && 'ContactsManager' in window) {
+    document.getElementById('contact-picker-btn')?.classList.remove('hidden');
+  }
 
   const params = new URLSearchParams(location.search);
 
@@ -290,52 +309,6 @@ function selectTone(tone) {
   });
   speak(MSG[tone].tone_confirm, tone, () => showView('onboarding-name'));
   setTimeout(() => showView('onboarding-name'), 1600);
-}
-
-// ─────────────────────────────────────────────
-// WIZARD (friend reminder creation)
-// ─────────────────────────────────────────────
-let _wizardStep = 1;
-
-function wizardNext(step) {
-  if (step === 1) {
-    const name = document.getElementById('nag-friend-name').value.trim();
-    if (!name) { showToast('Enter their name first'); return; }
-    const el = document.getElementById('wpane-2-title');
-    if (el) el.innerHTML = `What does <span style="color:var(--primary)">${name}</span><br>keep forgetting?`;
-  }
-  if (step === 2) {
-    const thing = document.getElementById('nag-thing').value.trim();
-    if (!thing) { showToast('What do they need to remember?'); return; }
-    const { user } = getState();
-    document.getElementById('preview-from').textContent = `From ${user?.name || 'you'}`;
-    document.getElementById('preview-thing').textContent = thing;
-  }
-  _wizardStep = step + 1;
-  document.getElementById(`wpane-${step}`).classList.remove('active');
-  document.getElementById(`wpane-${_wizardStep}`).classList.add('active');
-  _updateWizardDots();
-}
-
-function wizardBack(step) {
-  _wizardStep = step - 1;
-  document.getElementById(`wpane-${step}`).classList.remove('active');
-  document.getElementById(`wpane-${_wizardStep}`).classList.add('active');
-  _updateWizardDots();
-}
-
-function _updateWizardDots() {
-  document.querySelectorAll('.wdot').forEach((d, i) => {
-    d.classList.toggle('active', i < _wizardStep);
-  });
-}
-
-function resetWizard() {
-  _wizardStep = 1;
-  document.querySelectorAll('.wpane').forEach(p => p.classList.remove('active'));
-  const p1 = document.getElementById('wpane-1');
-  if (p1) p1.classList.add('active');
-  _updateWizardDots();
 }
 
 function fillExample(text) {
@@ -414,8 +387,11 @@ function renderHome() {
   const { user } = getState();
   if (!user) return;
 
+  const nameEl = document.getElementById('home-name');
+  if (nameEl) nameEl.textContent = user.name;
+
   const greetEl = document.getElementById('home-greeting');
-  if (greetEl) greetEl.textContent = `Hey ${user.name} 👋`;
+  if (greetEl) greetEl.textContent = msg('greeting', user.tone);
 
   renderRemindersPreview();
 }
@@ -488,16 +464,13 @@ function generateNag() {
 }
 
 async function pickContact() {
-  if (!('contacts' in navigator && 'ContactsManager' in window)) {
-    showToast('Contact picker not supported — enter name & number manually');
-    return;
-  }
+  if (!('contacts' in navigator && 'ContactsManager' in window)) return;
   try {
     const contacts = await navigator.contacts.select(['name', 'tel'], { multiple: false });
     if (!contacts.length) return;
     const c = contacts[0];
     if (c.name?.[0]) document.getElementById('nag-friend-name').value = c.name[0];
-    if (c.tel?.[0]) document.getElementById('nag-phone').value = c.tel[0];
+    if (c.tel?.[0])  document.getElementById('nag-phone').value  = c.tel[0];
   } catch {
     showToast('Could not open contacts');
   }
