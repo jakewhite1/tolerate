@@ -1,10 +1,10 @@
 {
   "name": "Tolerate",
   "short_name": "Tolerate",
-  "description": "Nag your friends so they don't have to nag you.",
+  "description": "Reminders that hit different.",
   "start_url": ".",
   "display": "standalone",
-  "background_color": "#0A0A0A",
+  "background_color": "#0D0D0D",
   "theme_color": "#FF4D00",
   "orientation": "portrait-primary",
   "icons": [
@@ -14,5 +14,14 @@
       "type": "image/svg+xml",
       "purpose": "any"
     }
-  ]
+  ],
+  "share_target": {
+    "action": "/",
+    "method": "GET",
+    "params": {
+      "title": "title",
+      "text": "remind",
+      "url": "url"
+    }
+  }
 }

@@ -17,6 +17,41 @@
 const SHEETS_URL = '';
 
 // ─────────────────────────────────────────────
+// TEXT-TO-SPEECH
+// ─────────────────────────────────────────────
+let _voices = [];
+function _loadVoices() { _voices = window.speechSynthesis?.getVoices() || []; }
+if (window.speechSynthesis) {
+  _loadVoices();
+  window.speechSynthesis.addEventListener('voiceschanged', _loadVoices);
+}
+
+const VOICE_CFG = {
+  sarcastic: { names: ['Karen','Victoria','Tessa','Fiona','Google UK English Female'], rate: 0.86, pitch: 0.82 },
+  warm:      { names: ['Samantha','Moira','Veena','Google US English Female'],         rate: 1.0,  pitch: 1.18 },
+  brutal:    { names: ['Alex','Daniel','Fred','Google UK English Male'],               rate: 1.08, pitch: 0.72 },
+  straight:  { names: ['Samantha','Google US English','Nicky'],                        rate: 1.0,  pitch: 1.0  },
+};
+
+function speak(text, tone, onEnd) {
+  if (!window.speechSynthesis || !text) { onEnd?.(); return; }
+  const synth = window.speechSynthesis;
+  synth.cancel();
+  if (!_voices.length) _voices = synth.getVoices();
+
+  const cfg = VOICE_CFG[tone] || VOICE_CFG.straight;
+  const voice = _voices.find(v => cfg.names.some(n => v.name.startsWith(n)));
+
+  const utt = new SpeechSynthesisUtterance(text);
+  if (voice) utt.voice = voice;
+  utt.rate   = cfg.rate;
+  utt.pitch  = cfg.pitch;
+  utt.volume = 1;
+  if (onEnd) utt.onend = onEnd;
+  synth.speak(utt);
+}
+
+// ─────────────────────────────────────────────
 // PERSONALITY MESSAGES
 // ─────────────────────────────────────────────
 const MSG = {
@@ -147,6 +182,7 @@ function showView(id, direction = 'forward') {
   if (id === 'home') renderHome();
   if (id === 'reminders') renderReminders();
   if (id === 'self-nag') setTimeout(startListening, 400);
+  if (id === 'create-friend-nag') resetWizard();
   if (id !== 'self-nag' && _listeningActive) stopListening();
 }
 
@@ -166,20 +202,28 @@ document.addEventListener('DOMContentLoaded', () => {
   registerSW();
   checkScheduledReminders();
 
-  // Check if this is a friend landing (nag link)
   const params = new URLSearchParams(location.search);
-  if (params.get('nag') === '1') {
-    initFriendLanding(params);
-    return;
-  }
 
-  // Check if opening from a notification tap
+  // Friend landing (nag link)
+  if (params.get('nag') === '1') { initFriendLanding(params); return; }
+
+  // Notification tap → open check-in
   const checkId = params.get('check');
   if (checkId) {
     const s = getState();
+    if (s.onboarded) { showView('home'); openReminderCheck(checkId); return; }
+  }
+
+  // Share Target / Siri Shortcut: ?remind=TEXT
+  const remindText = params.get('remind') || params.get('text');
+  if (remindText) {
+    history.replaceState({}, '', location.pathname);
+    const s = getState();
     if (s.onboarded) {
       showView('home');
-      openReminderCheck(checkId);
+      createSelfReminder(remindText.trim(), true);
+      speak(`Got it. I'll remind you to ${remindText.trim()}.`, s.user?.tone);
+      showToast(`Reminder set: "${remindText.trim()}"`);
       return;
     }
   }
@@ -210,7 +254,74 @@ function selectTone(tone) {
   document.querySelectorAll('.tone-card').forEach(c => {
     c.classList.toggle('selected', c.dataset.tone === tone);
   });
-  setTimeout(() => showView('onboarding-name'), 350);
+  speak(MSG[tone].tone_confirm, tone, () => showView('onboarding-name'));
+  setTimeout(() => showView('onboarding-name'), 1600);
+}
+
+// ─────────────────────────────────────────────
+// WIZARD (friend reminder creation)
+// ─────────────────────────────────────────────
+let _wizardStep = 1;
+
+function wizardNext(step) {
+  if (step === 1) {
+    const name = document.getElementById('nag-friend-name').value.trim();
+    if (!name) { showToast('Enter their name first'); return; }
+    const el = document.getElementById('wpane-2-title');
+    if (el) el.innerHTML = `What does <span style="color:var(--primary)">${name}</span><br>keep forgetting?`;
+  }
+  if (step === 2) {
+    const thing = document.getElementById('nag-thing').value.trim();
+    if (!thing) { showToast('What do they need to remember?'); return; }
+    const { user } = getState();
+    document.getElementById('preview-from').textContent = `From ${user?.name || 'you'}`;
+    document.getElementById('preview-thing').textContent = thing;
+  }
+  _wizardStep = step + 1;
+  document.getElementById(`wpane-${step}`).classList.remove('active');
+  document.getElementById(`wpane-${_wizardStep}`).classList.add('active');
+  _updateWizardDots();
+}
+
+function wizardBack(step) {
+  _wizardStep = step - 1;
+  document.getElementById(`wpane-${step}`).classList.remove('active');
+  document.getElementById(`wpane-${_wizardStep}`).classList.add('active');
+  _updateWizardDots();
+}
+
+function _updateWizardDots() {
+  document.querySelectorAll('.wdot').forEach((d, i) => {
+    d.classList.toggle('active', i < _wizardStep);
+  });
+}
+
+function resetWizard() {
+  _wizardStep = 1;
+  document.querySelectorAll('.wpane').forEach(p => p.classList.remove('active'));
+  const p1 = document.getElementById('wpane-1');
+  if (p1) p1.classList.add('active');
+  _updateWizardDots();
+}
+
+function fillExample(text) {
+  const el = document.getElementById('nag-thing');
+  if (el) { el.value = text; el.focus(); }
+}
+
+function speakPreview() {
+  const { user } = getState();
+  const tone = user?.tone || 'straight';
+  const friendName = document.getElementById('nag-friend-name')?.value || 'there';
+  const thing = document.getElementById('preview-thing')?.textContent || '';
+  speak(`Hey ${friendName}! Just a quick reminder — ${thing}.`, tone);
+}
+
+function speakFriendReminder() {
+  const thing = document.getElementById('friend-nag-thing')?.textContent || '';
+  const tone = _pendingFriendNag?.tone || 'straight';
+  const friendName = document.getElementById('friend-name')?.value || _pendingFriendNag?.friend || 'there';
+  speak(`Hey ${friendName}! Just a reminder — ${thing}.`, tone);
 }
 
 function saveName() {
@@ -417,19 +528,29 @@ function initFriendLanding(params) {
   };
 
   const tone = _pendingFriendNag.tone;
-  const greeting = msg('friend_greeting', tone, {
-    from: _pendingFriendNag.from,
-    friend: _pendingFriendNag.friend,
-  });
 
-  document.getElementById('friend-from').textContent = greeting;
+  // Sender avatar
+  const avatarEl = document.getElementById('sender-avatar');
+  if (avatarEl) {
+    const name = _pendingFriendNag.from;
+    avatarEl.textContent = name[0]?.toUpperCase() || '?';
+    avatarEl.style.background = `hsl(${(name.charCodeAt(0) * 137) % 360},55%,40%)`;
+  }
+
+  document.getElementById('friend-from').textContent =
+    `${_pendingFriendNag.from} sent you a reminder`;
   document.getElementById('friend-nag-thing').textContent = _pendingFriendNag.thing;
-  document.getElementById('friend-name').value = _pendingFriendNag.friend !== 'you' ? _pendingFriendNag.friend : '';
+  document.getElementById('friend-name').value =
+    _pendingFriendNag.friend !== 'you' ? _pendingFriendNag.friend : '';
 
-  // Remove any onboarding-triggered views
   showView('friend-landing');
-  // Clear the URL so refreshing doesn't re-trigger
   history.replaceState({}, '', location.pathname);
+
+  // Auto-speak after a short pause
+  setTimeout(() => {
+    const friendName = _pendingFriendNag.friend !== 'you' ? _pendingFriendNag.friend : 'there';
+    speak(`Hey ${friendName}! ${_pendingFriendNag.from} wants to remind you — ${_pendingFriendNag.thing}.`, tone);
+  }, 800);
 }
 
 function acceptNag() {
@@ -680,13 +801,12 @@ function checkScheduledReminders() {
 }
 
 function fireReminder(reminder) {
-  const tone = getState().user?.tone || 'straight';
-  sendNotification(
-    '⏰ Tolerate',
-    `Hey! ${reminder.thing}`,
-    { checkId: reminder.id }
-  );
+  const { user } = getState();
+  const tone = user?.tone || 'straight';
+  const name = user?.name || 'there';
+  sendNotification('Tolerate', reminder.thing, { checkId: reminder.id });
   openReminderCheck(reminder.id);
+  setTimeout(() => speak(`Hey ${name}! Quick reminder — ${reminder.thing}.`, tone), 400);
 }
 
 function openReminderCheck(reminderId) {
@@ -716,7 +836,9 @@ function confirmDone() {
 
   const tone = getState().user?.tone;
   const emojis = { sarcastic: '😐', warm: '🎉', brutal: '💀', straight: '✅' };
-  showResponseScreen(emojis[tone] || '✅', msg('completed', tone));
+  const response = msg('completed', tone);
+  speak(response, tone);
+  showResponseScreen(emojis[tone] || '✅', response);
   _currentCheckId = null;
 }
 
@@ -734,7 +856,9 @@ function snoozeReminder(minutes) {
   scheduleReminder(reminders[idx]);
 
   const tone = getState().user?.tone;
-  showToast(msg('snoozed', tone));
+  const snoozedMsg = msg('snoozed', tone);
+  speak(snoozedMsg, tone);
+  showToast(snoozedMsg);
   goBack();
   _currentCheckId = null;
 }

@@ -166,47 +166,92 @@
   </div>
 
   <!-- ═══════════════════════════════════════
-       CREATE FRIEND NAG
+       REMIND A FRIEND — 3-step wizard
   ════════════════════════════════════════ -->
   <div id="create-friend-nag" class="view">
     <div class="view-content">
-      <div class="nav-bar">
+
+      <!-- Progress dots -->
+      <div class="wizard-progress">
+        <div class="wdot active" id="wdot-1"></div>
+        <div class="wdot" id="wdot-2"></div>
+        <div class="wdot" id="wdot-3"></div>
+      </div>
+
+      <!-- Step 1: Who -->
+      <div class="wpane active" id="wpane-1">
         <button class="btn-back" onclick="goBack()"><i class="ph-bold ph-arrow-left"></i></button>
-        <h2>Remind a Friend</h2>
-        <div style="width:60px"></div>
-      </div>
+        <h2 style="margin:20px 0 28px">Who are you<br>reminding?</h2>
 
-      <div class="form-section">
-        <label class="form-label">Their name</label>
-        <div style="display:flex;gap:8px;align-items:center">
-          <input type="text" id="nag-friend-name" class="input-field" placeholder="What do they go by?" style="flex:1">
-          <button class="btn btn-secondary" id="contacts-btn" onclick="pickContact()" style="width:auto;padding:0 16px;height:52px;white-space:nowrap;font-size:22px" title="Pick from contacts"><i class="ph-bold ph-address-book"></i></button>
+        <button class="contact-pick-btn" onclick="pickContact()">
+          <i class="ph-bold ph-address-book"></i>
+          <span>Pick from contacts</span>
+          <i class="ph-bold ph-arrow-right" style="margin-left:auto;opacity:.4"></i>
+        </button>
+
+        <div class="wpane-divider">or type it</div>
+
+        <div class="form-section">
+          <input type="text" id="nag-friend-name" class="input-field"
+            placeholder="Their name"
+            onkeydown="if(event.key==='Enter') wizardNext(1)">
         </div>
-      </div>
-
-      <div class="form-section">
-        <label class="form-label">Their phone number <span style="font-weight:400;text-transform:none;letter-spacing:0">(so we can open Messages for you)</span></label>
-        <input type="tel" id="nag-phone" class="input-field" placeholder="(555) 000-0000" autocomplete="tel">
-      </div>
-
-      <div class="form-section">
-        <label class="form-label">What do they keep forgetting?</label>
-        <textarea id="nag-thing" class="textarea-field" rows="3"
-          placeholder="e.g. Reply to messages, call their mom, submit that thing…"></textarea>
-      </div>
-
-      <div class="form-section">
-        <label class="form-label">How often?</label>
-        <div class="frequency-options" id="frequency-options">
-          <button class="freq-btn active" data-freq="once" onclick="setFrequency('once')">One time</button>
-          <button class="freq-btn" data-freq="daily" onclick="setFrequency('daily')">Daily</button>
-          <button class="freq-btn" data-freq="weekly" onclick="setFrequency('weekly')">Weekly</button>
+        <div class="form-section">
+          <input type="tel" id="nag-phone" class="input-field"
+            placeholder="Phone number (optional)"
+            autocomplete="tel">
         </div>
+        <button class="btn btn-primary btn-large" onclick="wizardNext(1)">Continue</button>
       </div>
 
-      <div style="margin-top:8px">
-        <button class="btn btn-primary btn-large" onclick="generateNag()">Next →</button>
+      <!-- Step 2: What -->
+      <div class="wpane" id="wpane-2">
+        <button class="btn-back" onclick="wizardBack(2)"><i class="ph-bold ph-arrow-left"></i></button>
+        <h2 id="wpane-2-title" style="margin:20px 0 28px">What do they<br>keep forgetting?</h2>
+
+        <textarea id="nag-thing" class="textarea-field" rows="4"
+          placeholder="Be specific. Vague reminders get ignored."></textarea>
+
+        <div class="example-chips-wrap">
+          <p class="examples-label">Quick fill</p>
+          <div class="example-chips">
+            <button onclick="fillExample('Reply to messages')">Reply to messages</button>
+            <button onclick="fillExample('Call their mom')">Call their mom</button>
+            <button onclick="fillExample('Submit the report')">Submit the report</button>
+            <button onclick="fillExample('Pay you back')">Pay you back</button>
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-large" style="margin-top:20px" onclick="wizardNext(2)">Preview</button>
       </div>
+
+      <!-- Step 3: Preview + Send -->
+      <div class="wpane" id="wpane-3">
+        <button class="btn-back" onclick="wizardBack(3)"><i class="ph-bold ph-arrow-left"></i></button>
+        <h2 style="margin:20px 0 24px">Looks good?</h2>
+
+        <div class="nag-preview-card">
+          <div class="nag-preview-from" id="preview-from">From you</div>
+          <div class="nag-preview-thing" id="preview-thing">…</div>
+          <button class="preview-play-btn" onclick="speakPreview()">
+            <i class="ph-bold ph-speaker-high"></i> Hear it
+          </button>
+        </div>
+
+        <div class="form-section" style="margin-top:24px">
+          <label class="form-label">How often?</label>
+          <div class="frequency-options" id="frequency-options">
+            <button class="freq-btn active" data-freq="once" onclick="setFrequency('once')">One time</button>
+            <button class="freq-btn" data-freq="daily" onclick="setFrequency('daily')">Daily</button>
+            <button class="freq-btn" data-freq="weekly" onclick="setFrequency('weekly')">Weekly</button>
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-large" style="margin-top:8px" onclick="generateNag()">
+          <i class="ph-bold ph-paper-plane-tilt"></i> Send reminder
+        </button>
+      </div>
+
     </div>
   </div>
 
@@ -214,16 +259,14 @@
        SHARE NAG
   ════════════════════════════════════════ -->
   <div id="share-nag" class="view">
-    <div class="view-content centered" style="gap:18px">
+    <div class="view-content centered" style="gap:16px">
       <div class="nav-bar" style="width:100%">
         <button class="btn-back" onclick="goBack()"><i class="ph-bold ph-arrow-left"></i></button>
         <div style="width:60px"></div>
       </div>
-      <div class="share-icon"><i class="ph-bold ph-paper-plane-tilt"></i></div>
+      <div class="share-sent-icon"><i class="ph-bold ph-paper-plane-tilt"></i></div>
       <h2 id="share-title" style="max-width:280px">Ready to send.</h2>
-      <p id="share-subtitle" class="subtitle" style="max-width:280px">
-        Send this to them. What they do with it is between them and their conscience.
-      </p>
+      <p id="share-subtitle" class="subtitle" style="max-width:280px"></p>
       <div class="stack" style="width:100%">
         <button class="btn btn-primary btn-large" id="btn-text-friend" onclick="textFriend()">
           <i class="ph-bold ph-chat-circle-text"></i> Open in Messages
@@ -231,51 +274,49 @@
         <button class="btn btn-secondary" onclick="shareNag()">
           <i class="ph-bold ph-share-network"></i> Share via…
         </button>
-        <button class="btn btn-ghost" onclick="copyNagLink()">
-          Copy link
-        </button>
-        <button class="btn btn-ghost" onclick="showView('home')">
-          Back to home
-        </button>
+        <button class="btn btn-ghost" onclick="copyNagLink()">Copy link</button>
+        <button class="btn btn-ghost" onclick="showView('home')">Back to home</button>
       </div>
-      <div class="share-link-box" style="width:100%;margin-top:4px">
+      <div class="share-link-box" style="width:100%">
         <p id="share-link-text" class="share-link"></p>
       </div>
     </div>
   </div>
 
   <!-- ═══════════════════════════════════════
-       FRIEND LANDING (recipient opens link)
+       FRIEND LANDING — bold, voiced
   ════════════════════════════════════════ -->
   <div id="friend-landing" class="view">
-    <div class="view-content">
-      <div class="friend-header" style="margin-top:16px">
-        <span class="friend-icon"><i class="ph-bold ph-hand-waving"></i></span>
-        <h2 id="friend-from">Someone sent you something.</h2>
+    <div class="view-content" style="padding-top:calc(var(--safe-top) + 40px)">
+
+      <div class="friend-hero">
+        <div class="sender-avatar" id="sender-avatar">?</div>
+        <p class="friend-from-line" id="friend-from">Jake sent you a reminder</p>
       </div>
 
-      <div class="friend-nag-card">
-        <p class="friend-nag-label">Don't forget to:</p>
-        <p id="friend-nag-thing" class="friend-nag-thing">…</p>
+      <div class="friend-reminder-card">
+        <p class="frc-eyebrow">Don't forget to</p>
+        <p class="frc-thing" id="friend-nag-thing">…</p>
+        <button class="frc-play-btn" onclick="speakFriendReminder()">
+          <i class="ph-bold ph-speaker-high"></i> Hear it
+        </button>
       </div>
 
-      <div class="friend-actions">
-        <div class="form-section">
-          <label class="form-label">What should we call you?</label>
-          <input type="text" id="friend-name" class="input-field" placeholder="Your name (optional)">
-        </div>
+      <div class="friend-action-stack">
+        <input type="text" id="friend-name" class="input-field"
+          placeholder="Your name (optional)" style="margin-bottom:12px">
         <button class="btn btn-primary btn-large" onclick="acceptNag()">
-          ✅ Set a reminder for this
+          <i class="ph-bold ph-bell"></i> Set a reminder
         </button>
         <button class="btn btn-secondary" onclick="markAlreadyDone()">
-          I already did it
+          Already done it
         </button>
         <button class="btn btn-ghost btn-small" onclick="dismissNag()">
-          Leave me alone
+          Not for me
         </button>
       </div>
 
-      <p class="fine-print" style="text-align:center; margin-top:20px; padding-bottom:40px">
+      <p class="fine-print" style="text-align:center;margin-top:24px;padding-bottom:40px">
         Tolerate — reminders that hit different.
       </p>
     </div>
