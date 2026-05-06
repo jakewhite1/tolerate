@@ -229,47 +229,25 @@
       <div class="form-section">
         <label class="form-label">Who</label>
         <div class="name-input-wrap">
-          <input type="text" id="nag-friend-name" class="input-field"
-            placeholder="Their name"
-            autocomplete="off">
+          <input type="text" id="nag-contact" class="input-field"
+            placeholder="Name or phone number"
+            autocomplete="name"
+            oninput="_currentNagPhone=''">
           <!-- shown via JS only if Contact Picker API is available -->
           <button class="name-contacts-btn hidden" id="contact-picker-btn" onclick="pickContact()" title="Pick from contacts">
-            <i class="ph-bold ph-user-circle"></i>
+            <i class="ph-bold ph-address-book"></i>
           </button>
         </div>
       </div>
 
       <div class="form-section">
-        <label class="form-label">Phone <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-3)">(optional — for texting)</span></label>
-        <input type="tel" id="nag-phone" class="input-field"
-          placeholder="(555) 000-0000"
-          autocomplete="tel">
-      </div>
-
-      <div class="form-section">
-        <label class="form-label">What to remember</label>
-        <textarea id="nag-thing" class="textarea-field" rows="3"
-          placeholder="Be specific. Vague reminders get ignored."></textarea>
-      </div>
-
-      <div class="example-chips" style="margin-bottom:20px">
-        <button onclick="fillExample('Reply to my message')">Reply to me</button>
-        <button onclick="fillExample('Call their mom')">Call their mom</button>
-        <button onclick="fillExample('Submit the report')">The report</button>
-        <button onclick="fillExample('Pay you back')">Pay me back</button>
-      </div>
-
-      <div class="form-section">
-        <label class="form-label">How often?</label>
-        <div class="frequency-options" id="frequency-options">
-          <button class="freq-btn active" data-freq="once" onclick="setFrequency('once')">Once</button>
-          <button class="freq-btn" data-freq="daily" onclick="setFrequency('daily')">Daily</button>
-          <button class="freq-btn" data-freq="weekly" onclick="setFrequency('weekly')">Weekly</button>
-        </div>
+        <label class="form-label">Message</label>
+        <textarea id="nag-thing" class="textarea-field" rows="5"
+          placeholder="What do they need to do — and when? Include the time, date, or deadline. Vague reminders get ignored."></textarea>
       </div>
 
       <button class="btn btn-primary btn-large" style="margin-top:8px" onclick="generateNag()">
-        <i class="ph-bold ph-paper-plane-tilt"></i> Create Reminder
+        <i class="ph-bold ph-paper-plane-tilt"></i> Send Reminder
       </button>
     </div>
   </div>

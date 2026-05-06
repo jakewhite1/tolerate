@@ -226,7 +226,6 @@ function saveReminders(reminders) {
 // ─────────────────────────────────────────────
 let _currentView = null;
 let _viewHistory = [];
-let _nagFrequency = 'once';
 let _currentCheckId = null;
 let _micRecognition = null;
 let _currentShareLink = '';
@@ -486,15 +485,10 @@ function selectTone(tone) {
   setTimeout(() => showView('onboarding-name'), 1600);
 }
 
-function fillExample(text) {
-  const el = document.getElementById('nag-thing');
-  if (el) { el.value = text; el.focus(); }
-}
-
 function speakPreview() {
   const { user } = getState();
   const tone = user?.tone || 'straight';
-  const friendName = document.getElementById('nag-friend-name')?.value || 'there';
+  const friendName = document.getElementById('nag-contact')?.value || 'there';
   const thing = document.getElementById('preview-thing')?.textContent || '';
   speak(`Hey ${friendName}! Just a quick reminder — ${thing}.`, tone);
 }
@@ -697,33 +691,28 @@ function sendNotificationWithCalendar(thing, nextAt) {
 // ─────────────────────────────────────────────
 // FRIEND NAG – CREATOR SIDE
 // ─────────────────────────────────────────────
-function setFrequency(freq) {
-  _nagFrequency = freq;
-  document.querySelectorAll('.freq-btn').forEach(b => {
-    b.classList.toggle('active', b.dataset.freq === freq);
-  });
-}
-
 function generateNag() {
-  const friendName = document.getElementById('nag-friend-name').value.trim();
-  const thing = document.getElementById('nag-thing').value.trim();
-  if (!friendName) { showToast('Enter their name first'); return; }
-  if (!thing)       { showToast('What should they remember?'); return; }
+  const contact = document.getElementById('nag-contact').value.trim();
+  const thing   = document.getElementById('nag-thing').value.trim();
+  if (!contact) { showToast('Enter a name or phone number'); return; }
+  if (!thing)   { showToast('What should they remember?'); return; }
 
-  _currentFriendName = friendName;
-  _currentNagPhone   = document.getElementById('nag-phone').value.trim();
+  // If the typed value looks like a phone, use it for SMS
+  const looksLikePhone = /^[\d\s\-\+\(\)\.]+$/.test(contact) && contact.replace(/\D/g,'').length >= 7;
+  if (looksLikePhone && !_currentNagPhone) _currentNagPhone = contact;
+
+  _currentFriendName = contact;
 
   const { user } = getState();
   const senderName = user?.name || 'Someone';
   const tone       = user?.tone || 'straight';
 
   const params = new URLSearchParams({
-    nag: '1', from: senderName, friend: friendName, what: thing,
-    freq: _nagFrequency, tone,
+    nag: '1', from: senderName, friend: contact, what: thing,
+    freq: 'once', tone,
   });
   _currentShareLink = `${location.origin}${location.pathname}?${params}`;
 
-  // If we have a phone number, go straight to Messages — no extra screen
   if (_currentNagPhone) {
     textFriend();
     showView('home');
@@ -731,7 +720,6 @@ function generateNag() {
     return;
   }
 
-  // No phone — show share screen so they can copy/share the link
   document.getElementById('share-title').textContent    = msg('nag_created', tone);
   document.getElementById('share-subtitle').textContent = msg('nag_sent', tone);
   const msgBtn = document.getElementById('btn-text-friend');
@@ -745,8 +733,10 @@ async function pickContact() {
     const contacts = await navigator.contacts.select(['name', 'tel'], { multiple: false });
     if (!contacts.length) return;
     const c = contacts[0];
-    if (c.name?.[0]) document.getElementById('nag-friend-name').value = c.name[0];
-    if (c.tel?.[0])  document.getElementById('nag-phone').value  = c.tel[0];
+    const name  = c.name?.[0]  || '';
+    const phone = c.tel?.[0]   || '';
+    document.getElementById('nag-contact').value = name || phone;
+    _currentNagPhone = phone;
   } catch {
     showToast('Could not open contacts');
   }
