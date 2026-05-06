@@ -221,48 +221,6 @@ p  { line-height: 1.55; }
 .btn-large { padding: 20px; font-size: 17px; }
 .btn-small  { font-size: 14px; padding: 12px; }
 
-/* ══════════════════════════════════════════════════════════
-   LIQUID GLASS HOME CARDS
-══════════════════════════════════════════════════════════ */
-.btn-big {
-  display: flex; align-items: center; gap: 18px;
-  width: 100%; padding: 24px 22px;
-  background: var(--glass);
-  backdrop-filter: blur(28px) saturate(180%);
-  -webkit-backdrop-filter: blur(28px) saturate(180%);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--r-xl);
-  box-shadow:
-    inset 0 1.5px 0 var(--glass-sheen),
-    inset 0 -1px 0 rgba(0,0,0,0.3),
-    0 16px 48px rgba(0,0,0,0.5),
-    0 2px 8px rgba(0,0,0,0.3);
-  cursor: pointer; touch-action: manipulation;
-  transition: transform 0.5s var(--spring), box-shadow 0.25s;
-  text-align: left; -webkit-appearance: none;
-  position: relative; overflow: hidden;
-}
-.btn-big:active {
-  transform: scale(0.95);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.6);
-  transition: transform 0.08s, box-shadow 0.08s;
-}
-
-/* Primary home card — orange gradient glow */
-.btn-big-primary {
-  background: linear-gradient(140deg, rgba(255,77,0,0.2) 0%, rgba(255,77,0,0.06) 100%);
-  border-color: rgba(255,77,0,0.3);
-  box-shadow:
-    inset 0 1.5px 0 rgba(255,120,60,0.25),
-    inset 0 -1px 0 rgba(0,0,0,0.3),
-    0 16px 48px rgba(0,0,0,0.5),
-    0 0 60px rgba(255,77,0,0.1);
-}
-
-.btn-big-icon  { font-size: 34px; flex-shrink: 0; line-height: 1; }
-.btn-big-label { font-size: 17px; font-weight: 700; color: var(--text); display: block; margin-bottom: 4px; letter-spacing: -0.3px; }
-.btn-big-sub   { font-size: 13px; color: var(--text-2); font-weight: 400; display: block; line-height: 1.4; }
-
 /* ══ NEUMORPHIC INPUTS ══ */
 .input-large {
   width: 100%; padding: 18px 20px;
@@ -442,26 +400,6 @@ p  { line-height: 1.55; }
 .tone-card--sarcastic .tone-emoji { font-size: 34px; margin-bottom: 14px; }
 .tone-card--sarcastic .tone-sample { font-size: 13px; }
 
-/* ══ FREQUENCY PILLS ══ */
-.frequency-options { display: flex; gap: 8px; flex-wrap: wrap; }
-.freq-btn {
-  padding: 11px 20px; border-radius: 100px;
-  background: var(--glass);
-  border: 1px solid var(--glass-border);
-  color: var(--text-2); font-size: 14px; font-weight: 600;
-  cursor: pointer;
-  transition: all 0.42s var(--spring); touch-action: manipulation;
-  box-shadow: var(--neu-up);
-}
-.freq-btn:active { transform: scale(0.91); transition: transform 0.06s; }
-.freq-btn.active {
-  background: var(--primary-bg);
-  border-color: rgba(255,77,0,0.35);
-  color: var(--primary);
-  box-shadow: 0 0 0 1px rgba(255,77,0,0.22), 0 4px 18px rgba(255,77,0,0.22);
-  transform: scale(1.06);
-}
-
 /* ══ SHARE ══ */
 .share-icon { font-size: 52px; }
 .share-link-box {
@@ -556,18 +494,6 @@ p  { line-height: 1.55; }
 .frc-play-btn:active { transform: scale(0.91); transition: transform 0.06s; }
 .frc-play-btn .ph-bold { font-size: 18px; }
 .friend-action-stack { display: flex; flex-direction: column; gap: 10px; }
-
-/* Legacy */
-.friend-header { margin-bottom: 24px; text-align: center; }
-.friend-icon { font-size: 60px; display: block; margin-bottom: 14px; }
-.friend-from { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; line-height: 1.3; }
-.friend-nag-card {
-  background: var(--glass); border: 1px solid var(--glass-border);
-  border-radius: var(--r-xl); padding: 24px; margin-bottom: 24px; width: 100%;
-}
-.friend-nag-label { font-size: 11px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.9px; font-weight: 600; margin-bottom: 10px; }
-.friend-nag-thing { font-size: 22px; font-weight: 700; line-height: 1.3; letter-spacing: -0.5px; }
-.friend-actions { display: flex; flex-direction: column; gap: 10px; width: 100%; }
 
 /* ══════════════════════════════════════════════════════════
    HOME — bento grid redesign
@@ -770,28 +696,8 @@ p  { line-height: 1.55; }
 .glance-actions button:active { transform: scale(0.88); transition: all 0.06s; }
 .empty-state { text-align: center; color: var(--text-3); font-size: 15px; padding: 40px 20px; line-height: 1.7; }
 
-.separator-text    { font-size: 13px; color: var(--text-3); text-align: center; }
-.manual-nag-section { width: 100%; display: flex; flex-direction: column; gap: 10px; }
-
 /* ══ REMINDERS LIST ══ */
 .reminders-list { display: flex; flex-direction: column; }
-.reminder-thing { font-size: 17px; font-weight: 700; line-height: 1.3; flex: 1; margin-right: 12px; letter-spacing: -0.3px; }
-.reminder-badge {
-  font-size: 11px; font-weight: 800; padding: 5px 12px;
-  border-radius: 100px; background: var(--primary-bg);
-  border: 1px solid rgba(151,193,170,0.3);
-  color: var(--primary-dark); white-space: nowrap; letter-spacing: 0.3px;
-}
-.reminder-badge.done { background: var(--success-bg); border-color: rgba(200,165,255,0.3); color: #7B5EA7; }
-.reminder-item-meta { font-size: 13px; color: var(--text-3); display: flex; gap: 12px; flex-wrap: wrap; }
-.reminder-actions { display: flex; gap: 8px; margin-top: 16px; }
-.reminder-actions button {
-  flex: 1; padding: 11px; border-radius: var(--r-sm);
-  border: none; font-size: 13px; font-weight: 700;
-  cursor: pointer; touch-action: manipulation;
-  transition: transform 0.45s var(--spring);
-}
-.reminder-actions button:active { transform: scale(0.91); transition: transform 0.06s; }
 .action-done   { background: var(--success-bg); color: #7B5EA7; border: 1px solid rgba(200,165,255,0.25) !important; }
 .action-snooze { background: var(--surface-2); color: var(--text-2); }
 .action-delete { background: rgba(255,59,48,0.1); color: rgb(255,59,48); border: 1px solid rgba(255,59,48,0.2) !important; font-size: 16px; }
@@ -873,22 +779,6 @@ p  { line-height: 1.55; }
   transform: translateX(-50%) translateY(0) scale(1);
 }
 
-/* ══ WIZARD ══ */
-.wizard-progress { display: flex; gap: 6px; margin-bottom: 8px; }
-.wdot {
-  height: 4px; flex: 1; border-radius: 2px;
-  background: var(--surface-2);
-  transition: background 0.45s var(--spring), transform 0.45s var(--spring), box-shadow 0.45s;
-}
-.wdot.active {
-  background: var(--primary);
-  transform: scaleY(1.75);
-  box-shadow: 0 0 10px rgba(151,193,170,0.5);
-}
-
-.wpane { display: none; }
-.wpane.active { display: block; }
-
 .name-input-wrap { position: relative; }
 
 /* ── Contact permission prompt ── */
@@ -928,96 +818,12 @@ p  { line-height: 1.55; }
 .csi-name  { font-size: 14px; font-weight: 700; color: var(--text); }
 .csi-phone { font-size: 12px; color: var(--text-3); white-space: nowrap; }
 
-.example-chips-wrap { margin-top: 16px; }
-.examples-label {
-  font-size: 11px; color: var(--text-3); font-weight: 800;
-  text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 10px;
-}
-.example-chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.example-chips button {
-  padding: 9px 16px;
-  background: var(--glass);
-  border: 1px solid var(--glass-border);
-  border-radius: 100px;
-  color: var(--text-2); font-size: 13px; font-weight: 600;
-  cursor: pointer; touch-action: manipulation;
-  transition: all 0.45s var(--spring);
-  box-shadow: var(--neu-up);
-}
-.example-chips button:active {
-  background: var(--primary-bg); border-color: rgba(255,77,0,0.35); color: var(--primary);
-  transform: scale(0.91); transition: all 0.06s;
-}
-
-.nag-preview-card {
-  background: var(--glass);
-  backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--r-xl); padding: 24px;
-  position: relative; overflow: hidden;
-  box-shadow:
-    inset 0 1.5px 0 var(--glass-sheen),
-    inset 0 -1px 0 rgba(0,0,0,0.3),
-    0 20px 52px rgba(0,0,0,0.45);
-}
-.nag-preview-card::after {
-  content: '';
-  position: absolute; top: 0; left: 10px; right: 10px; height: 1px;
-  background: linear-gradient(90deg, transparent, var(--glass-sheen), transparent);
-}
-.nag-preview-card::before {
-  content: '';
-  position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
-  background: linear-gradient(180deg, var(--primary) 0%, transparent 100%);
-  border-radius: 4px 0 0 4px;
-}
-.nag-preview-from {
-  font-size: 11px; color: var(--text-3); font-weight: 800;
-  text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 12px;
-}
-.nag-preview-thing { font-size: 22px; font-weight: 700; line-height: 1.3; letter-spacing: -0.5px; margin-bottom: 18px; }
-.preview-play-btn {
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 10px 18px;
-  background: var(--primary-bg);
-  border: 1px solid rgba(255,77,0,0.22);
-  border-radius: 100px;
-  color: var(--primary); font-size: 14px; font-weight: 700;
-  cursor: pointer; touch-action: manipulation;
-  transition: transform 0.45s var(--spring);
-}
-.preview-play-btn:active { transform: scale(0.90); transition: transform 0.06s; }
-.preview-play-btn .ph-bold { font-size: 16px; }
-
 /* ══ PHOSPHOR ICONS ══ */
 .ph-bold, .ph, .ph-fill { line-height: 1; }
 .nav-icon .ph-bold { font-size: 24px; display: block; }
-.btn-big-icon .ph-bold { font-size: 28px; color: var(--primary); }
 .btn-back .ph-bold { font-size: 20px; }
 .btn .ph-bold { font-size: 18px; vertical-align: middle; margin-right: 6px; }
-.share-icon .ph-bold { font-size: 52px; display: block; color: var(--primary); }
-.friend-icon .ph-bold { font-size: 60px; display: block; color: var(--text); }
-#contacts-btn .ph-bold { font-size: 22px; }
-
-/* ══ TONE SWITCHER PILLS (home screen) ══ */
-.tone-switcher { display: flex; gap: 8px; flex-wrap: wrap; }
-.tone-pill {
-  padding: 9px 15px; border-radius: 100px;
-  background: var(--glass);
-  border: 1px solid var(--glass-border);
-  color: var(--text-2); font-size: 13px; font-weight: 600;
-  cursor: pointer; touch-action: manipulation; white-space: nowrap;
-  transition: all 0.45s var(--spring);
-  box-shadow: var(--neu-up);
-}
-.tone-pill:active { transform: scale(0.91); transition: transform 0.06s; }
-.tone-pill.active {
-  background: var(--primary-bg);
-  border-color: rgba(255,77,0,0.4);
-  color: var(--primary);
-  box-shadow: 0 0 0 1px rgba(255,77,0,0.2), 0 4px 18px rgba(255,77,0,0.22);
-  transform: scale(1.04);
-}
+.share-sent-icon .ph-bold { font-size: 52px; display: block; color: var(--primary); }
 
 /* ══ INSTALL CARD ══ */
 .install-card {

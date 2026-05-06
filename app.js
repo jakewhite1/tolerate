@@ -262,9 +262,8 @@ function showView(id, direction = 'forward') {
   }
 
   // View-specific init
-  if (id === 'home') {
-    renderHome();
-    }
+  if (id === 'home') renderHome();
+  if (id === 'reminders') renderReminders();
 }
 
 function goBack() {
@@ -468,14 +467,6 @@ function selectTone(tone) {
   });
   speak(MSG[tone].tone_confirm, tone, () => showView('onboarding-name'));
   setTimeout(() => showView('onboarding-name'), 1600);
-}
-
-function speakPreview() {
-  const { user } = getState();
-  const tone = user?.tone || 'straight';
-  const friendName = document.getElementById('nag-contact')?.value || 'there';
-  const thing = document.getElementById('preview-thing')?.textContent || '';
-  speak(`Hey ${friendName}! Just a quick reminder — ${thing}.`, tone);
 }
 
 function speakFriendReminder() {
@@ -1080,6 +1071,7 @@ function deleteReminder(id) {
   saveReminders(reminders);
   clearTimeout(_timers[id]);
   renderReminders();
+  renderRemindersPreview();
 }
 
 // ─────────────────────────────────────────────
