@@ -4,8 +4,8 @@
   "description": "Reminders that hit different.",
   "start_url": ".",
   "display": "standalone",
-  "background_color": "#0D0D0D",
-  "theme_color": "#FF4D00",
+  "background_color": "#F9F9F9",
+  "theme_color": "#97C1AA",
   "orientation": "portrait-primary",
   "icons": [
     {

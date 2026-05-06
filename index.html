@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Tolerate">
-  <meta name="theme-color" content="#FF4D00">
+  <meta name="theme-color" content="#97C1AA">
   <meta name="description" content="Reminders that hit different.">
   <title>Tolerate</title>
   <link rel="manifest" href="manifest.json">
@@ -135,22 +135,14 @@
   </div>
 
   <!-- ═══════════════════════════════════════
-       HOME — Bento grid layout
+       HOME
   ════════════════════════════════════════ -->
   <div id="home" class="view">
     <div class="home-content">
 
-      <!-- Top bar: date -->
+      <!-- Top bar: date + tone -->
       <div class="home-topbar">
         <div class="home-date" id="home-date"></div>
-      </div>
-
-      <!-- Hero: big name + greeting | vertical tone dots -->
-      <div class="home-hero">
-        <div class="home-hero-text">
-          <div class="home-name" id="home-name">Hey</div>
-          <div class="home-greeting" id="home-greeting"> </div>
-        </div>
         <div class="tone-switcher-compact">
           <button class="tone-dot" data-tone="sarcastic" onclick="switchTone('sarcastic')" title="Sarcastic">🙄</button>
           <button class="tone-dot" data-tone="warm"      onclick="switchTone('warm')"      title="Warm">🤗</button>
@@ -159,7 +151,11 @@
         </div>
       </div>
 
-      <!-- Incoming reminder banner — hidden until a reminder fires -->
+      <!-- Greeting -->
+      <div class="home-name" id="home-name">Hey</div>
+      <div class="home-greeting" id="home-greeting"> </div>
+
+      <!-- Incoming reminder banner -->
       <div class="incoming-banner hidden" id="incoming-banner">
         <div class="incoming-dot"></div>
         <div class="incoming-content">
@@ -177,22 +173,22 @@
         </button>
       </div>
 
-      <!-- Bento action grid -->
-      <div class="home-bento">
-        <button class="bento-card bento-primary" onclick="showView('create-friend-nag')">
-          <div class="bento-icon"><i class="ph-bold ph-paper-plane-tilt"></i></div>
-          <div class="bento-label">Remind<br>a Friend</div>
-        </button>
-        <button class="bento-card" onclick="showView('self-nag')">
-          <div class="bento-icon"><i class="ph-bold ph-pencil-simple"></i></div>
-          <div class="bento-label">Remind<br>Myself</div>
-        </button>
+      <!-- Primary CTA -->
+      <button class="home-cta" onclick="showView('create-friend-nag')">
+        <i class="ph-bold ph-paper-plane-tilt"></i> Send Nudge
+      </button>
+
+      <!-- Secondary: remind yourself inline -->
+      <div class="home-self-remind">
+        <input type="text" id="manual-nag-input" class="input-field"
+          placeholder="Remind myself…"
+          onkeydown="if(event.key==='Enter') createManualSelfNag()">
       </div>
 
       <!-- Active reminders preview -->
       <div id="reminders-preview"></div>
 
-      <!-- Install nudge — shown by JS when the browser offers an install prompt -->
+      <!-- Install nudge -->
       <div id="install-card" class="install-card hidden">
         <div class="install-card-left">
           <div class="install-card-icon">📲</div>
@@ -208,18 +204,12 @@
   </div>
 
   <!-- ═══════════════════════════════════════
-       REMIND A FRIEND — single screen, no wizard
+       FRIENDS TAB — send a nudge
   ════════════════════════════════════════ -->
   <div id="create-friend-nag" class="view">
     <div class="view-content">
-      <div class="nav-bar">
-        <button class="btn-back" onclick="goBack()">
-          <i class="ph-bold ph-arrow-left"></i> Back
-        </button>
-        <h2>Remind Someone</h2>
-        <button class="btn-home" onclick="showView('home','back')" title="Home">
-          <i class="ph-bold ph-house"></i>
-        </button>
+      <div class="tab-header">
+        <h2>Send a Nudge</h2>
       </div>
 
       <div class="form-section">
@@ -242,7 +232,7 @@
           placeholder="What do they need to do — and when? Include the time, date, or deadline. Vague reminders get ignored."></textarea>
       </div>
 
-      <button class="btn btn-primary btn-large" style="margin-top:8px" onclick="generateNag()">
+      <button class="tab-cta" style="margin-top:8px" onclick="generateNag()">
         <i class="ph-bold ph-paper-plane-tilt"></i> Send Reminder
       </button>
     </div>
@@ -322,40 +312,12 @@
   </div>
 
   <!-- ═══════════════════════════════════════
-       SELF NAG — type to remind yourself
-  ════════════════════════════════════════ -->
-  <div id="self-nag" class="view">
-    <div class="view-content" style="padding-bottom:calc(var(--safe-bottom) + 40px)">
-      <div class="nav-bar">
-        <button class="btn-back" onclick="goBack()">
-          <i class="ph-bold ph-arrow-left"></i> Back
-        </button>
-        <h2>Remind Myself</h2>
-        <button class="btn-home" onclick="showView('home','back')" title="Home">
-          <i class="ph-bold ph-house"></i>
-        </button>
-      </div>
-
-      <div class="form-section" style="margin-bottom:14px">
-        <label class="form-label">What do you need to remember?</label>
-        <input type="text" id="manual-nag-input" class="input-field"
-          placeholder="Type and hit Enter…"
-          onkeydown="if(event.key==='Enter') createManualSelfNag()">
-      </div>
-    </div>
-  </div>
-
-  <!-- ═══════════════════════════════════════
-       REMINDERS LIST
+       HISTORY TAB
   ════════════════════════════════════════ -->
   <div id="reminders" class="view">
     <div class="view-content no-bottom">
-      <div class="nav-bar">
-        <button class="btn-back" onclick="goBack()">
-          <i class="ph-bold ph-arrow-left"></i> Back
-        </button>
-        <h2>Reminders</h2>
-        <div style="width:44px"></div>
+      <div class="tab-header">
+        <h2>History</h2>
       </div>
       <div id="reminders-list" class="reminders-list"></div>
     </div>
@@ -406,15 +368,19 @@
   ════════════════════════════════════════ -->
   <div id="toast" class="toast"></div>
 
-  <!-- Bottom nav lives OUTSIDE views so it persists across navigation -->
+  <!-- Bottom tab bar -->
   <nav class="bottom-nav hidden">
     <button class="nav-item" data-view="home" onclick="showView('home')">
       <span class="nav-icon"><i class="ph-bold ph-house"></i></span>
       <span>Home</span>
     </button>
+    <button class="nav-item" data-view="create-friend-nag" onclick="showView('create-friend-nag')">
+      <span class="nav-icon"><i class="ph-bold ph-paper-plane-tilt"></i></span>
+      <span>Friends</span>
+    </button>
     <button class="nav-item" data-view="reminders" onclick="showView('reminders')">
-      <span class="nav-icon"><i class="ph-bold ph-bell"></i></span>
-      <span>Reminders</span>
+      <span class="nav-icon"><i class="ph-bold ph-clock-counter-clockwise"></i></span>
+      <span>History</span>
     </button>
   </nav>
 

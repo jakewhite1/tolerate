@@ -231,8 +231,8 @@ let _currentFriendName = '';
 let _bannerTimer = null;
 let _bannerCalendarData = null;
 
-// Views that show the persistent bottom nav
-const _NAV_VIEWS = new Set(['home', 'reminders']);
+// Views that show the persistent bottom nav (the three tabs)
+const _NAV_VIEWS = new Set(['home', 'create-friend-nag', 'reminders']);
 
 function showView(id, direction = 'forward') {
   const next = document.getElementById(id);
@@ -279,7 +279,7 @@ function goBack() {
 // ─────────────────────────────────────────────
 // SWIPE NAVIGATION
 // ─────────────────────────────────────────────
-const SWIPE_ORDER = ['home', 'self-nag', 'create-friend-nag', 'reminders'];
+const SWIPE_ORDER = ['home', 'create-friend-nag', 'reminders'];
 const SWIPE_MIN = 50;
 let _swipeX = null, _swipeY = null, _swipeLocked = null;
 
