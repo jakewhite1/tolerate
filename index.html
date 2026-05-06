@@ -140,13 +140,9 @@
   <div id="home" class="view">
     <div class="home-content">
 
-      <!-- Top bar: date + listening indicator -->
+      <!-- Top bar: date -->
       <div class="home-topbar">
         <div class="home-date" id="home-date"></div>
-        <div class="home-listen-pill hidden" id="home-listen-indicator">
-          <span class="listen-pill-dot"></span>
-          <span>Listening</span>
-        </div>
       </div>
 
       <!-- Hero: big name + greeting | vertical tone dots -->
@@ -188,7 +184,7 @@
           <div class="bento-label">Remind<br>a Friend</div>
         </button>
         <button class="bento-card" onclick="showView('self-nag')">
-          <div class="bento-icon"><i class="ph-bold ph-microphone"></i></div>
+          <div class="bento-icon"><i class="ph-bold ph-pencil-simple"></i></div>
           <div class="bento-label">Remind<br>Myself</div>
         </button>
       </div>
@@ -326,65 +322,26 @@
   </div>
 
   <!-- ═══════════════════════════════════════
-       SELF NAG — type or mic
+       SELF NAG — type to remind yourself
   ════════════════════════════════════════ -->
   <div id="self-nag" class="view">
     <div class="view-content" style="padding-bottom:calc(var(--safe-bottom) + 40px)">
       <div class="nav-bar">
-        <button class="btn-back" onclick="goBack(); stopListening();">
+        <button class="btn-back" onclick="goBack()">
           <i class="ph-bold ph-arrow-left"></i> Back
         </button>
         <h2>Remind Myself</h2>
-        <button class="btn-home" onclick="showView('home','back'); stopListening();" title="Home">
+        <button class="btn-home" onclick="showView('home','back')" title="Home">
           <i class="ph-bold ph-house"></i>
         </button>
       </div>
 
-      <!-- Primary: type the reminder — press Enter to save -->
       <div class="form-section" style="margin-bottom:14px">
         <label class="form-label">What do you need to remember?</label>
         <input type="text" id="manual-nag-input" class="input-field"
           placeholder="Type and hit Enter…"
           onkeydown="if(event.key==='Enter') createManualSelfNag()">
       </div>
-
-      <!-- Mic toggle — icon button -->
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
-        <button class="mic-toggle-btn" id="mic-toggle-btn" onclick="toggleListening()" title="Toggle microphone">
-          <i class="ph-bold ph-microphone"></i>
-        </button>
-        <span class="mic-toggle-hint" id="mic-toggle-label">Tap mic to start listening</span>
-      </div>
-
-      <!-- Mic area — hidden until user taps the toggle -->
-      <div class="listen-area hidden" id="listen-area">
-        <div class="listen-hero" style="padding:24px 0 16px">
-          <div class="listen-orb" id="listen-orb">
-            <div class="listen-orb-ring"></div>
-            <div class="listen-orb-ring-2"></div>
-            <span class="listen-orb-icon"><i class="ph-bold ph-microphone"></i></span>
-          </div>
-          <p class="listen-status" id="listen-status">Ready</p>
-          <p class="listen-hint">Just talk. We're listening.</p>
-        </div>
-        <div class="listen-transcript-box">
-          <div class="transcript-header hidden" id="transcript-header">
-            <span class="transcript-heard-label">Heard</span>
-            <button class="transcript-clear-btn" onclick="clearTranscript()">
-              <i class="ph-bold ph-trash"></i> Clear
-            </button>
-          </div>
-          <p class="listen-transcript" id="listen-transcript" contenteditable="true"
-             style="outline:none;min-height:24px"></p>
-        </div>
-        <button class="btn btn-primary hidden" id="transcript-save-btn"
-          onclick="saveTranscriptAsReminder()" style="margin-top:10px">
-          <i class="ph-bold ph-check"></i> Save as reminder
-        </button>
-      </div>
-
-      <!-- Captured reminders from mic -->
-      <div id="listen-captured" class="listen-captured" style="margin-top:16px"></div>
     </div>
   </div>
 

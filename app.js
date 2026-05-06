@@ -77,8 +77,6 @@ function _primeSpeech() {
     _pendingSpeech = null;
     setTimeout(() => _doSpeak(text, tone, onEnd), 150);
   }
-  // Auto-start passive home listening after first user tap
-  if (_currentView === 'home' && !_homeListening) _startHomeListening();
 }
 
 function speak(text, tone, onEnd) {
@@ -227,12 +225,9 @@ function saveReminders(reminders) {
 let _currentView = null;
 let _viewHistory = [];
 let _currentCheckId = null;
-let _micRecognition = null;
 let _currentShareLink = '';
 let _currentNagPhone = '';
 let _currentFriendName = '';
-let _listeningMode = null;   // 'home' | 'self-nag'
-let _homeListening = false;
 let _bannerTimer = null;
 let _bannerCalendarData = null;
 
@@ -269,12 +264,7 @@ function showView(id, direction = 'forward') {
   // View-specific init
   if (id === 'home') {
     renderHome();
-    if (_speechPrimed) _startHomeListening();
-  } else {
-    _stopHomeListening();
-    if (id === 'self-nag') _resetMicToggleUI();
-    else if (_listeningActive && _listeningMode === 'self-nag') stopListening();
-  }
+    }
 }
 
 function goBack() {
@@ -872,281 +862,6 @@ function dismissNag() {
 // ─────────────────────────────────────────────
 // SELF NAG
 // ─────────────────────────────────────────────
-const NAG_TRIGGERS = [
-  "don't let me forget", "dont let me forget",
-  "before i forget", "i need to remember to", "remind me to",
-  "i need to remember", "need to remember", "don't forget to",
-  "dont forget to", "make sure i", "i should remember to",
-  "i have to remember to", "i gotta remember to",
-  "note to self", "mental note",
-];
-
-let _listeningActive = false;
-let _wakeLock = null;
-
-function _resetMicToggleUI() {
-  // Keep transcript text — user clears it themselves
-  const hasTranscript = document.getElementById('listen-transcript')?.textContent?.trim();
-  if (hasTranscript) {
-    // Keep listen-area visible so transcript stays readable
-    document.getElementById('listen-area')?.classList.remove('hidden');
-  } else {
-    document.getElementById('listen-area')?.classList.add('hidden');
-  }
-  const btn = document.getElementById('mic-toggle-btn');
-  if (btn) {
-    btn.classList.remove('active');
-    document.getElementById('mic-toggle-label').textContent = 'Use microphone';
-  }
-  const status = document.getElementById('listen-status');
-  if (status) status.textContent = 'Ready';
-}
-
-function clearTranscript() {
-  const el = document.getElementById('listen-transcript');
-  if (el) el.textContent = '';
-  document.getElementById('transcript-save-btn')?.classList.add('hidden');
-  document.getElementById('transcript-header')?.classList.add('hidden');
-  document.getElementById('listen-area')?.classList.add('hidden');
-}
-
-function _startHomeListening() {
-  if (_homeListening || _listeningActive) return;
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) return;
-  _homeListening = true;
-  _listeningActive = true;
-  _listeningMode = 'home';
-  document.getElementById('home-listen-indicator')?.classList.remove('hidden');
-  runRecognition();
-}
-
-function _stopHomeListening() {
-  if (!_homeListening) return;
-  _homeListening = false;
-  if (_listeningMode === 'home') {
-    _listeningActive = false;
-    _listeningMode = null;
-    if (_micRecognition) { try { _micRecognition.stop(); } catch {} _micRecognition = null; }
-  }
-  document.getElementById('home-listen-indicator')?.classList.add('hidden');
-}
-
-function autoCaptureFromHome(thing) {
-  const reminder = createReminderObj({ thing, frequency: 'once', type: 'self' });
-  addReminder(reminder);
-  scheduleReminder(reminder);
-  _bannerCalendarData = { thing, nextAt: reminder.nextAt };
-  const tone = getState().user?.tone;
-  const name = getState().user?.name || 'there';
-  speak(`Got it, ${name}. Reminding you to ${thing}.`, tone);
-  showIncomingBanner(`"${thing}" — saved`, reminder.id, true);
-  sendNotificationWithCalendar(thing, reminder.nextAt);
-  renderRemindersPreview();
-}
-
-function toggleListening() {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) { showToast('Speech recognition not supported in this browser'); return; }
-
-  if (_listeningActive && _listeningMode === 'self-nag') {
-    stopListening();
-    document.getElementById('listen-area')?.classList.add('hidden');
-    const btn = document.getElementById('mic-toggle-btn');
-    if (btn) {
-      btn.classList.remove('active');
-      document.getElementById('mic-toggle-label').textContent = 'Use microphone';
-    }
-  } else {
-    // Stop home listener if running before starting self-nag
-    _stopHomeListening();
-    _listeningMode = 'self-nag';
-    document.getElementById('listen-area')?.classList.remove('hidden');
-    const btn = document.getElementById('mic-toggle-btn');
-    if (btn) {
-      btn.classList.add('active');
-      document.getElementById('mic-toggle-label').textContent = 'Stop microphone';
-    }
-    startListening();
-  }
-}
-
-async function startListening() {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) {
-    setListenStatus('Speech recognition not supported in this browser', false);
-    return;
-  }
-
-  _listeningActive = true;
-  setListenStatus('Listening…', true);
-  acquireWakeLock();
-  runRecognition();
-}
-
-function runRecognition() {
-  if (!_listeningActive) return;
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  _micRecognition = new SR();
-  _micRecognition.continuous = true;
-  _micRecognition.interimResults = true;
-  _micRecognition.lang = 'en-US';
-
-  _micRecognition.onresult = (e) => {
-    let interim = '', final = '';
-    for (let i = e.resultIndex; i < e.results.length; i++) {
-      const t = e.results[i][0].transcript;
-      if (e.results[i].isFinal) final += t;
-      else interim += t;
-    }
-
-    if (_listeningMode === 'home') {
-      // Passive home mode — only capture trigger phrases, no transcript UI
-      if (final) {
-        const extracted = extractNagFromSpeech(final.toLowerCase());
-        if (extracted) autoCaptureFromHome(extracted);
-      }
-      return;
-    }
-
-    // self-nag mode — full transcript UI
-    const display = final || interim;
-    const el = document.getElementById('listen-transcript');
-    if (el) el.textContent = display;
-    // Show header + save button whenever there's content
-    const hasContent = display.trim().length > 0;
-    document.getElementById('transcript-header')?.classList.toggle('hidden', !hasContent);
-    document.getElementById('transcript-save-btn')?.classList.toggle('hidden', !hasContent);
-    if (final) {
-      const extracted = extractNagFromSpeech(final.toLowerCase());
-      if (extracted) {
-        autoCaptureReminder(extracted);
-        // Keep transcript text — just hide the Save button (it's already been captured)
-        document.getElementById('transcript-save-btn')?.classList.add('hidden');
-      }
-    }
-  };
-
-  _micRecognition.onerror = (e) => {
-    if (e.error === 'not-allowed') {
-      setListenStatus('Microphone access denied', false);
-      _listeningActive = false;
-    }
-  };
-
-  _micRecognition.onend = () => {
-    // Restart automatically — keeps listening forever
-    if (_listeningActive) setTimeout(runRecognition, 200);
-  };
-
-  try { _micRecognition.start(); } catch {}
-}
-
-function stopListening() {
-  _listeningActive = false;
-  _homeListening = false;
-  _listeningMode = null;
-  if (_micRecognition) { try { _micRecognition.stop(); } catch {} _micRecognition = null; }
-  if (_wakeLock) { _wakeLock.release?.(); _wakeLock = null; }
-  setListenStatus('Ready', false);
-  const btn = document.getElementById('mic-toggle-btn');
-  if (btn) {
-    btn.classList.remove('active');
-    const lbl = document.getElementById('mic-toggle-label');
-    if (lbl) lbl.textContent = 'Use microphone';
-  }
-  document.getElementById('home-listen-indicator')?.classList.add('hidden');
-}
-
-function setListenStatus(text, active) {
-  const el = document.getElementById('listen-status');
-  const orb = document.getElementById('listen-orb');
-  if (el) el.textContent = text;
-  if (orb) orb.classList.toggle('listening', active);
-}
-
-async function acquireWakeLock() {
-  if (!('wakeLock' in navigator)) return;
-  try { _wakeLock = await navigator.wakeLock.request('screen'); } catch {}
-}
-
-function extractNagFromSpeech(text) {
-  for (const trigger of NAG_TRIGGERS) {
-    const idx = text.indexOf(trigger);
-    if (idx !== -1) {
-      const after = text.slice(idx + trigger.length).trim();
-      if (after.length > 2) return after.replace(/^to\s+/, '');
-    }
-  }
-  return null;
-}
-
-function autoCaptureReminder(thing) {
-  // Clear transcript
-  const transcriptEl = document.getElementById('listen-transcript');
-  if (transcriptEl) transcriptEl.textContent = '';
-
-  createSelfReminder(thing, true);
-
-  // Add to the captured list in the UI
-  const list = document.getElementById('listen-captured');
-  if (list) {
-    const item = document.createElement('div');
-    item.className = 'captured-item';
-    item.innerHTML = `
-      <div class="captured-check">✓</div>
-      <div class="captured-text">${esc(thing)}</div>
-      <div class="captured-time">just now</div>
-    `;
-    list.prepend(item);
-  }
-
-  // Flash the orb green briefly
-  const orb = document.getElementById('listen-orb');
-  if (orb) {
-    orb.classList.add('captured');
-    setTimeout(() => orb.classList.remove('captured'), 1200);
-  }
-
-  showToast(`Got it — "${thing}"`);
-}
-
-function saveTranscriptAsReminder() {
-  const el = document.getElementById('listen-transcript');
-  const text = (el?.textContent || '').trim();
-  if (!text) return;
-  // Keep the transcript text — only hide the Save button
-  document.getElementById('transcript-save-btn')?.classList.add('hidden');
-
-  createSelfReminder(text, true);
-
-  const list = document.getElementById('listen-captured');
-  if (list) {
-    const item = document.createElement('div');
-    item.className = 'captured-item';
-    item.innerHTML = `
-      <div class="captured-check">✓</div>
-      <div class="captured-text">${esc(text)}</div>
-      <div class="captured-time">just now</div>
-    `;
-    list.prepend(item);
-  }
-
-  const orb = document.getElementById('listen-orb');
-  if (orb) {
-    orb.classList.add('captured');
-    setTimeout(() => orb.classList.remove('captured'), 1200);
-  }
-
-  showToast(`Saved — "${text}"`);
-}
-
-// keep these as no-ops so old HTML refs don't break
-function toggleMic() {}
-function stopMic() {}
-function showDetectedNag() {}
-function retryMic() {}
-function confirmSelfNag() {}
 
 function createManualSelfNag() {
   const thing = document.getElementById('manual-nag-input').value.trim();
