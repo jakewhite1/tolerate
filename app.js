@@ -288,6 +288,34 @@ function goBack() {
 }
 
 // ─────────────────────────────────────────────
+// SWIPE NAVIGATION
+// ─────────────────────────────────────────────
+const SWIPE_ORDER = ['home', 'self-nag', 'create-friend-nag', 'reminders'];
+const SWIPE_MIN = 65;
+let _swipeX = null, _swipeY = null;
+
+document.addEventListener('touchstart', e => {
+  if (e.target.closest('input, textarea, [contenteditable="true"], select')) {
+    _swipeX = null;
+    return;
+  }
+  _swipeX = e.touches[0].clientX;
+  _swipeY = e.touches[0].clientY;
+}, { passive: true });
+
+document.addEventListener('touchend', e => {
+  if (_swipeX === null) return;
+  const dx = e.changedTouches[0].clientX - _swipeX;
+  const dy = e.changedTouches[0].clientY - _swipeY;
+  _swipeX = null; _swipeY = null;
+  if (Math.abs(dx) < SWIPE_MIN || Math.abs(dy) >= Math.abs(dx) * 0.8) return;
+  const idx = SWIPE_ORDER.indexOf(_currentView);
+  if (idx === -1) return;
+  if (dx < 0 && idx < SWIPE_ORDER.length - 1) showView(SWIPE_ORDER[idx + 1]);
+  else if (dx > 0 && idx > 0) showView(SWIPE_ORDER[idx - 1], 'back');
+}, { passive: true });
+
+// ─────────────────────────────────────────────
 // INIT
 // ─────────────────────────────────────────────
 // ─────────────────────────────────────────────
