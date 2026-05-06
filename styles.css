@@ -721,60 +721,60 @@ p  { line-height: 1.55; }
 .tab-cta:active { transform: translate(4px,4px); box-shadow: var(--brutal-active); transition: all 0.06s; }
 .tab-cta .ph-bold { font-size: 20px; }
 
-/* ── Reminders preview ── */
+/* ── Glanceable reminder cards (home preview + history) ── */
 .preview-label {
   font-size: 11px; color: var(--text-3); text-transform: uppercase;
   letter-spacing: 1.2px; font-weight: 800; margin-bottom: 12px;
 }
-.preview-item {
-  display: flex; align-items: center; gap: 12px;
-  padding: 14px 16px;
+.glance-card {
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px 18px;
   background: var(--glass);
   border: 1px solid var(--glass-border);
-  border-radius: var(--r-lg); margin-bottom: 8px;
-  transition: transform 0.45s var(--spring);
+  border-radius: 12px; margin-bottom: 10px;
   box-shadow: var(--neu-up);
-  position: relative; overflow: hidden;
+  cursor: pointer; touch-action: manipulation;
+  transition: transform 0.45s var(--spring), box-shadow 0.25s;
 }
-.preview-item::after {
-  content: '';
-  position: absolute; top: 0; left: 0; right: 0; height: 1px;
-  background: linear-gradient(90deg, transparent, var(--glass-sheen), transparent);
+.glance-card:active { transform: scale(0.97); box-shadow: var(--neu-down); transition: all 0.07s; }
+.glance-card--full { cursor: default; }
+.glance-card--full:active { transform: none; box-shadow: var(--neu-up); }
+.glance-card--done {
+  background: var(--accent-bg);
+  border-color: rgba(200,165,255,0.3);
+  box-shadow: 0 2px 14px rgba(200,165,255,0.15);
 }
-.preview-item-dot {
-  width: 8px; height: 8px; border-radius: 50%;
-  background: var(--primary); box-shadow: 0 0 10px var(--primary-glow); flex-shrink: 0;
+.glance-dot {
+  width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0;
 }
-.preview-item-text { flex: 1; font-size: 15px; font-weight: 600; letter-spacing: -0.2px; cursor: pointer; }
-.preview-item-time { font-size: 12px; color: var(--text-3); white-space: nowrap; }
-.preview-item-delete {
+.glance-dot--pending { background: var(--primary); box-shadow: 0 0 8px var(--primary-glow); }
+.glance-dot--done    { background: var(--accent); box-shadow: 0 0 8px rgba(200,165,255,0.5); }
+.glance-body { flex: 1; min-width: 0; }
+.glance-thing { font-size: 15px; font-weight: 700; letter-spacing: -0.2px; color: var(--text); line-height: 1.3; }
+.glance-meta  { font-size: 12px; color: var(--text-3); margin-top: 3px; font-weight: 500; }
+.glance-delete {
   background: none; border: none; color: var(--text-3); padding: 6px;
   cursor: pointer; touch-action: manipulation; font-size: 16px;
-  transition: color 0.2s, transform 0.3s var(--spring);
   display: flex; align-items: center; flex-shrink: 0;
+  transition: color 0.2s, transform 0.3s var(--spring);
 }
-.preview-item-delete:active { color: rgb(255,59,48); transform: scale(0.84); transition: all 0.06s; }
+.glance-delete:active { color: rgb(220,60,50); transform: scale(0.84); transition: all 0.06s; }
+.glance-actions {
+  display: flex; gap: 6px; flex-shrink: 0;
+}
+.glance-actions button {
+  padding: 7px 12px; border-radius: 8px; border: none;
+  font-size: 12px; font-weight: 700; cursor: pointer; touch-action: manipulation;
+  transition: transform 0.4s var(--spring);
+}
+.glance-actions button:active { transform: scale(0.88); transition: all 0.06s; }
 .empty-state { text-align: center; color: var(--text-3); font-size: 15px; padding: 40px 20px; line-height: 1.7; }
 
 .separator-text    { font-size: 13px; color: var(--text-3); text-align: center; }
 .manual-nag-section { width: 100%; display: flex; flex-direction: column; gap: 10px; }
 
 /* ══ REMINDERS LIST ══ */
-.reminders-list { display: flex; flex-direction: column; gap: 10px; }
-.reminder-item {
-  background: var(--glass);
-  border: 1px solid var(--glass-border);
-  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-  border-radius: var(--r-xl); padding: 20px;
-  box-shadow: var(--neu-up);
-  position: relative; overflow: hidden;
-}
-.reminder-item::after {
-  content: '';
-  position: absolute; top: 0; left: 10px; right: 10px; height: 1px;
-  background: linear-gradient(90deg, transparent, var(--glass-sheen), transparent);
-}
-.reminder-item-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+.reminders-list { display: flex; flex-direction: column; }
 .reminder-thing { font-size: 17px; font-weight: 700; line-height: 1.3; flex: 1; margin-right: 12px; letter-spacing: -0.3px; }
 .reminder-badge {
   font-size: 11px; font-weight: 800; padding: 5px 12px;

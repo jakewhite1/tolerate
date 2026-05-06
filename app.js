@@ -586,18 +586,23 @@ function renderRemindersPreview() {
   const el = document.getElementById('reminders-preview');
   if (!el) return;
   const reminders = getReminders().filter(r => !r.done);
-  if (!reminders.length) { el.innerHTML = ''; return; }
+  if (!reminders.length) { el.innerHTML = '<div class="empty-state">Nothing due. You\'re ahead.</div>'; return; }
   el.innerHTML = `<div class="preview-label">Coming up</div>` +
-    reminders.slice(0, 4).map(r => `
-      <div class="preview-item">
-        <div class="preview-item-dot"></div>
-        <div class="preview-item-text" onclick="showIncomingBanner('${esc(r.thing)}','${r.id}',false)">${esc(r.thing)}</div>
-        <div class="preview-item-time">${formatTime(r.nextAt)}</div>
-        <button class="preview-item-delete" onclick="deleteReminder('${r.id}')" title="Delete">
-          <i class="ph-bold ph-trash"></i>
-        </button>
-      </div>
-    `).join('');
+    reminders.slice(0, 4).map(r => {
+      const who = r.type === 'friend' ? (r.friend || r.from || 'Friend') : 'Me';
+      return `
+        <div class="glance-card" onclick="showIncomingBanner('${esc(r.thing)}','${r.id}',false)">
+          <div class="glance-dot glance-dot--pending"></div>
+          <div class="glance-body">
+            <div class="glance-thing">${esc(r.thing)}</div>
+            <div class="glance-meta">${esc(who)} &middot; ${formatTime(r.nextAt)}</div>
+          </div>
+          <button class="glance-delete" onclick="event.stopPropagation();deleteReminder('${r.id}')" title="Delete">
+            <i class="ph-bold ph-trash"></i>
+          </button>
+        </div>
+      `;
+    }).join('');
 }
 
 // ─────────────────────────────────────────────
@@ -1015,28 +1020,24 @@ function renderReminders() {
     return;
   }
   el.innerHTML = reminders.map(r => {
-    const statusClass = r.done ? 'done' : '';
-    const statusLabel = r.done ? 'Done' : `Due ${formatTime(r.nextAt)}`;
-    const typeLabel = r.type === 'friend' ? `From ${r.from || 'friend'}` : 'Self';
+    const who = r.type === 'friend' ? (r.friend || r.from || 'Friend') : 'Me';
+    const dotClass = r.done ? 'glance-dot--done' : 'glance-dot--pending';
     return `
-      <div class="reminder-item">
-        <div class="reminder-item-header">
-          <div class="reminder-thing">${esc(r.thing)}</div>
-          <div class="reminder-badge ${statusClass}">${statusLabel}</div>
-        </div>
-        <div class="reminder-item-meta">
-          <span>${typeLabel}</span>
-          <span>${r.frequency}</span>
+      <div class="glance-card glance-card--full ${r.done ? 'glance-card--done' : ''}">
+        <div class="glance-dot ${dotClass}"></div>
+        <div class="glance-body">
+          <div class="glance-thing">${esc(r.thing)}</div>
+          <div class="glance-meta">${esc(who)} &middot; ${r.done ? 'Done' : formatTime(r.nextAt)}</div>
         </div>
         ${!r.done ? `
-        <div class="reminder-actions">
-          <button class="action-done" onclick="markDoneFromList('${r.id}')">✅ Done</button>
-          <button class="action-snooze" onclick="snoozeFromList('${r.id}')">⏰ Snooze</button>
-          <button class="action-delete" onclick="deleteReminder('${r.id}')"><i class="ph-bold ph-trash"></i> Delete</button>
+        <div class="glance-actions">
+          <button class="action-done" onclick="markDoneFromList('${r.id}')">Done</button>
+          <button class="action-snooze" onclick="snoozeFromList('${r.id}')">Later</button>
+          <button class="action-delete" onclick="deleteReminder('${r.id}')"><i class="ph-bold ph-trash"></i></button>
         </div>` : `
-        <div class="reminder-actions">
-          <button class="action-delete" onclick="deleteReminder('${r.id}')">Remove</button>
-        </div>`}
+        <button class="glance-delete" onclick="deleteReminder('${r.id}')" title="Remove">
+          <i class="ph-bold ph-trash"></i>
+        </button>`}
       </div>
     `;
   }).join('');
