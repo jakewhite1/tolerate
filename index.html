@@ -362,26 +362,21 @@
         </button>
       </div>
 
-      <!-- Primary: type the reminder -->
+      <!-- Primary: type the reminder — press Enter to save -->
       <div class="form-section" style="margin-bottom:14px">
         <label class="form-label">What do you need to remember?</label>
-        <div style="display:flex;gap:8px">
-          <input type="text" id="manual-nag-input" class="input-field"
-            placeholder="Call the dentist, pick up groceries…"
-            style="flex:1"
-            onkeydown="if(event.key==='Enter') createManualSelfNag()">
-          <button class="btn btn-primary" onclick="createManualSelfNag()"
-            style="width:auto;padding:0 22px;flex-shrink:0">
-            <i class="ph-bold ph-plus"></i>
-          </button>
-        </div>
+        <input type="text" id="manual-nag-input" class="input-field"
+          placeholder="Type and hit Enter…"
+          onkeydown="if(event.key==='Enter') createManualSelfNag()">
       </div>
 
-      <!-- Mic toggle — secondary option -->
-      <button class="mic-toggle-btn" id="mic-toggle-btn" onclick="toggleListening()">
-        <i class="ph-bold ph-microphone" id="mic-toggle-icon"></i>
-        <span id="mic-toggle-label">Use microphone</span>
-      </button>
+      <!-- Mic toggle — icon button -->
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
+        <button class="mic-toggle-btn" id="mic-toggle-btn" onclick="toggleListening()" title="Toggle microphone">
+          <i class="ph-bold ph-microphone"></i>
+        </button>
+        <span class="mic-toggle-hint" id="mic-toggle-label">Tap mic to start listening</span>
+      </div>
 
       <!-- Mic area — hidden until user taps the toggle -->
       <div class="listen-area hidden" id="listen-area">
@@ -395,12 +390,18 @@
           <p class="listen-hint">Just talk. We're listening.</p>
         </div>
         <div class="listen-transcript-box">
+          <div class="transcript-header hidden" id="transcript-header">
+            <span class="transcript-heard-label">Heard</span>
+            <button class="transcript-clear-btn" onclick="clearTranscript()">
+              <i class="ph-bold ph-trash"></i> Clear
+            </button>
+          </div>
           <p class="listen-transcript" id="listen-transcript" contenteditable="true"
              style="outline:none;min-height:24px"></p>
         </div>
         <button class="btn btn-primary hidden" id="transcript-save-btn"
           onclick="saveTranscriptAsReminder()" style="margin-top:10px">
-          <i class="ph-bold ph-check"></i> Save this reminder
+          <i class="ph-bold ph-check"></i> Save as reminder
         </button>
       </div>
 

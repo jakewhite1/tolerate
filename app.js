@@ -852,10 +852,14 @@ let _listeningActive = false;
 let _wakeLock = null;
 
 function _resetMicToggleUI() {
-  document.getElementById('listen-area')?.classList.add('hidden');
-  document.getElementById('listen-transcript') && (document.getElementById('listen-transcript').textContent = '');
-  document.getElementById('transcript-save-btn')?.classList.add('hidden');
-  document.getElementById('listen-captured') && (document.getElementById('listen-captured').innerHTML = '');
+  // Keep transcript text — user clears it themselves
+  const hasTranscript = document.getElementById('listen-transcript')?.textContent?.trim();
+  if (hasTranscript) {
+    // Keep listen-area visible so transcript stays readable
+    document.getElementById('listen-area')?.classList.remove('hidden');
+  } else {
+    document.getElementById('listen-area')?.classList.add('hidden');
+  }
   const btn = document.getElementById('mic-toggle-btn');
   if (btn) {
     btn.classList.remove('active');
@@ -863,6 +867,14 @@ function _resetMicToggleUI() {
   }
   const status = document.getElementById('listen-status');
   if (status) status.textContent = 'Ready';
+}
+
+function clearTranscript() {
+  const el = document.getElementById('listen-transcript');
+  if (el) el.textContent = '';
+  document.getElementById('transcript-save-btn')?.classList.add('hidden');
+  document.getElementById('transcript-header')?.classList.add('hidden');
+  document.getElementById('listen-area')?.classList.add('hidden');
 }
 
 function _startHomeListening() {
@@ -968,14 +980,16 @@ function runRecognition() {
     const display = final || interim;
     const el = document.getElementById('listen-transcript');
     if (el) el.textContent = display;
-    const saveBtn = document.getElementById('transcript-save-btn');
-    if (saveBtn) saveBtn.classList.toggle('hidden', !display.trim());
+    // Show header + save button whenever there's content
+    const hasContent = display.trim().length > 0;
+    document.getElementById('transcript-header')?.classList.toggle('hidden', !hasContent);
+    document.getElementById('transcript-save-btn')?.classList.toggle('hidden', !hasContent);
     if (final) {
       const extracted = extractNagFromSpeech(final.toLowerCase());
       if (extracted) {
         autoCaptureReminder(extracted);
-        if (el) el.textContent = '';
-        if (saveBtn) saveBtn.classList.add('hidden');
+        // Keep transcript text — just hide the Save button (it's already been captured)
+        document.getElementById('transcript-save-btn')?.classList.add('hidden');
       }
     }
   };
@@ -1068,7 +1082,7 @@ function saveTranscriptAsReminder() {
   const el = document.getElementById('listen-transcript');
   const text = (el?.textContent || '').trim();
   if (!text) return;
-  el.textContent = '';
+  // Keep the transcript text — only hide the Save button
   document.getElementById('transcript-save-btn')?.classList.add('hidden');
 
   createSelfReminder(text, true);

@@ -890,9 +890,26 @@ p  { line-height: 1.55; }
   min-height: 48px;
   background: var(--bg-1);
   border: 1px solid rgba(255,255,255,0.05);
-  border-radius: var(--r-md); padding: 14px 16px; margin-bottom: 16px;
+  border-radius: var(--r-md); padding: 12px 14px; margin-bottom: 16px;
   box-shadow: var(--neu-down);
 }
+.transcript-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 8px;
+}
+.transcript-heard-label {
+  font-size: 10px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 1.2px; color: var(--text-3);
+}
+.transcript-clear-btn {
+  display: flex; align-items: center; gap: 5px;
+  background: none; border: none; padding: 4px 8px; border-radius: 6px;
+  color: rgb(255,59,48); font-size: 12px; font-weight: 700;
+  cursor: pointer; touch-action: manipulation;
+  transition: opacity 0.2s;
+}
+.transcript-clear-btn:active { opacity: 0.6; }
+.transcript-clear-btn .ph-bold { font-size: 13px; }
 .listen-transcript { font-size: 16px; color: var(--text-2); line-height: 1.5; min-height: 24px; }
 
 .listen-captured { display: flex; flex-direction: column; gap: 8px; }
@@ -1156,26 +1173,34 @@ p  { line-height: 1.55; }
 
 /* ══ MIC TOGGLE BUTTON (self-nag) ══ */
 .mic-toggle-btn {
-  width: 100%; padding: 15px 18px;
+  width: 56px; height: 56px; border-radius: 50%;
   background: var(--glass);
   border: 1px solid var(--glass-border);
-  border-radius: var(--r-md);
-  color: var(--text-2); font-size: 15px; font-weight: 600;
+  color: var(--text-2);
   cursor: pointer; touch-action: manipulation;
-  display: flex; align-items: center; justify-content: center; gap: 10px;
+  display: flex; align-items: center; justify-content: center;
   transition: all 0.45s var(--spring);
-  box-shadow: var(--neu-up); margin-bottom: 0;
+  box-shadow: var(--neu-up); flex-shrink: 0;
 }
-.mic-toggle-btn:active { transform: scale(0.96); transition: transform 0.06s; }
+.mic-toggle-btn:active { transform: scale(0.88); transition: transform 0.06s; }
 .mic-toggle-btn.active {
-  background: var(--primary-bg);
-  border-color: rgba(255,77,0,0.4);
-  color: var(--primary);
-  box-shadow: 0 0 0 1px rgba(255,77,0,0.2), 0 4px 18px rgba(255,77,0,0.18);
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+  box-shadow: 0 0 0 4px rgba(255,77,0,0.2), 0 6px 22px rgba(255,77,0,0.4);
+  animation: mic-pulse 2s ease-in-out infinite;
 }
-.mic-toggle-btn .ph-bold { font-size: 20px; }
+@keyframes mic-pulse {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(255,77,0,0.2), 0 6px 22px rgba(255,77,0,0.4); }
+  50%       { box-shadow: 0 0 0 8px rgba(255,77,0,0.08), 0 8px 28px rgba(255,77,0,0.5); }
+}
+.mic-toggle-btn .ph-bold { font-size: 24px; }
+.mic-toggle-hint {
+  font-size: 14px; color: var(--text-3); font-weight: 500;
+  transition: color 0.2s;
+}
 
-.listen-area { margin-top: 4px; }
+.listen-area { margin-top: 12px; }
 
 /* ══ TONE SWITCHER PILLS (home screen) ══ */
 .tone-switcher { display: flex; gap: 8px; flex-wrap: wrap; }
