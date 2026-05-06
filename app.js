@@ -77,6 +77,8 @@ function _primeSpeech() {
     _pendingSpeech = null;
     setTimeout(() => _doSpeak(text, tone, onEnd), 150);
   }
+  // Auto-start passive home listening after first user tap
+  if (_currentView === 'home' && !_homeListening) _startHomeListening();
 }
 
 function speak(text, tone, onEnd) {
@@ -230,6 +232,10 @@ let _micRecognition = null;
 let _currentShareLink = '';
 let _currentNagPhone = '';
 let _currentFriendName = '';
+let _listeningMode = null;   // 'home' | 'self-nag'
+let _homeListening = false;
+let _bannerTimer = null;
+let _bannerCalendarData = null;
 
 // Views that show the persistent bottom nav
 const _NAV_VIEWS = new Set(['home', 'reminders']);
@@ -262,11 +268,14 @@ function showView(id, direction = 'forward') {
   }
 
   // View-specific init
-  if (id === 'home') renderHome();
-  if (id === 'reminders') renderReminders();
-  // self-nag: mic is opt-in — user taps the toggle to activate
-  if (id === 'self-nag') _resetMicToggleUI();
-  if (id !== 'self-nag' && _listeningActive) stopListening();
+  if (id === 'home') {
+    renderHome();
+    if (_speechPrimed) _startHomeListening();
+  } else {
+    _stopHomeListening();
+    if (id === 'self-nag') _resetMicToggleUI();
+    else if (_listeningActive && _listeningMode === 'self-nag') stopListening();
+  }
 }
 
 function goBack() {
@@ -359,11 +368,30 @@ document.addEventListener('DOMContentLoaded', () => {
   // Friend landing (nag link)
   if (params.get('nag') === '1') { initFriendLanding(params); return; }
 
-  // Notification tap → open check-in
+  // Notification tap → go home and surface the banner
   const checkId = params.get('check');
   if (checkId) {
+    history.replaceState({}, '', location.pathname);
     const s = getState();
-    if (s.onboarded) { showView('home'); openReminderCheck(checkId); return; }
+    if (s.onboarded) {
+      showView('home');
+      scheduleAllReminders();
+      const r = getReminders().find(r => r.id === checkId);
+      if (r && !r.done) { _currentCheckId = checkId; showIncomingBanner(r.thing, checkId, false); }
+      return;
+    }
+  }
+
+  // Notification "Add to Calendar" action
+  const calThing = params.get('calendar');
+  if (calThing) {
+    history.replaceState({}, '', location.pathname);
+    const s = getState();
+    if (s.onboarded) {
+      showView('home');
+      scheduleAllReminders();
+      setTimeout(() => saveToCalendar(calThing, parseInt(params.get('at')) || Date.now() + 3_600_000), 600);
+    }
   }
 
   // Share Target / Siri Shortcut: ?remind=TEXT
@@ -493,14 +521,22 @@ function renderHome() {
   const { user } = getState();
   if (!user) return;
 
+  // Date stamp
+  const dateEl = document.getElementById('home-date');
+  if (dateEl) {
+    const now = new Date();
+    dateEl.textContent = now.toLocaleDateString('en-US', {
+      weekday: 'short', month: 'short', day: 'numeric'
+    }).toUpperCase();
+  }
+
   const nameEl = document.getElementById('home-name');
   if (nameEl) nameEl.textContent = user.name;
 
   const greetEl = document.getElementById('home-greeting');
   if (greetEl) greetEl.textContent = msg('greeting', user.tone);
 
-  // Highlight active tone in switcher
-  document.querySelectorAll('.tone-pill').forEach(p => {
+  document.querySelectorAll('.tone-dot').forEach(p => {
     p.classList.toggle('active', p.dataset.tone === user.tone);
   });
 
@@ -511,10 +547,9 @@ function switchTone(tone) {
   const s = getState();
   if (!s.user) return;
   setState({ user: { ...s.user, tone } });
-  // Immediately refresh greeting and highlight
   const greetEl = document.getElementById('home-greeting');
   if (greetEl) greetEl.textContent = msg('greeting', tone);
-  document.querySelectorAll('.tone-pill').forEach(p => {
+  document.querySelectorAll('.tone-dot').forEach(p => {
     p.classList.toggle('active', p.dataset.tone === tone);
   });
   speak(MSG[tone].tone_confirm, tone);
@@ -524,18 +559,96 @@ function renderRemindersPreview() {
   const el = document.getElementById('reminders-preview');
   if (!el) return;
   const reminders = getReminders().filter(r => !r.done);
-  if (!reminders.length) {
-    el.innerHTML = '';
-    return;
-  }
+  if (!reminders.length) { el.innerHTML = ''; return; }
   el.innerHTML = `<div class="preview-label">Coming up</div>` +
-    reminders.slice(0, 3).map(r => `
-      <div class="preview-item" onclick="openReminderCheck('${r.id}')">
+    reminders.slice(0, 4).map(r => `
+      <div class="preview-item">
         <div class="preview-item-dot"></div>
-        <div class="preview-item-text">${esc(r.thing)}</div>
+        <div class="preview-item-text" onclick="showIncomingBanner('${esc(r.thing)}','${r.id}',false)">${esc(r.thing)}</div>
         <div class="preview-item-time">${formatTime(r.nextAt)}</div>
+        <button class="preview-item-delete" onclick="deleteReminder('${r.id}')" title="Delete">
+          <i class="ph-bold ph-trash"></i>
+        </button>
       </div>
     `).join('');
+}
+
+// ─────────────────────────────────────────────
+// INCOMING BANNER
+// ─────────────────────────────────────────────
+function showIncomingBanner(text, reminderId, showCalendar) {
+  _currentCheckId = reminderId;
+  const textEl = document.getElementById('incoming-text');
+  if (textEl) textEl.textContent = text;
+  const labelEl = document.getElementById('incoming-label');
+  if (labelEl) labelEl.textContent = showCalendar ? '🎙 Captured' : '⏰ Reminder';
+  const calBtn = document.getElementById('btn-banner-calendar');
+  if (calBtn) calBtn.classList.toggle('hidden', !showCalendar);
+  document.getElementById('incoming-banner')?.classList.remove('hidden');
+  clearTimeout(_bannerTimer);
+  _bannerTimer = setTimeout(dismissIncomingBanner, 14000);
+}
+
+function dismissIncomingBanner() {
+  clearTimeout(_bannerTimer);
+  document.getElementById('incoming-banner')?.classList.add('hidden');
+}
+
+function bannerDone() {
+  dismissIncomingBanner();
+  confirmDone();
+}
+
+function bannerSnooze() {
+  dismissIncomingBanner();
+  snoozeReminder(60); // snooze 1 hour by default
+}
+
+function bannerCalendar() {
+  if (_bannerCalendarData) saveToCalendar(_bannerCalendarData.thing, _bannerCalendarData.nextAt);
+}
+
+// ─────────────────────────────────────────────
+// CALENDAR EXPORT (.ics)
+// ─────────────────────────────────────────────
+function saveToCalendar(thing, nextAt) {
+  const due = new Date(nextAt || Date.now() + 3_600_000);
+  const end = new Date(due.getTime() + 3_600_000);
+  const fmt = d => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+  const ics = [
+    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Tolerate//EN',
+    'BEGIN:VEVENT',
+    `UID:tolerate-${Date.now()}@tolerate`,
+    `DTSTAMP:${fmt(new Date())}`,
+    `DTSTART:${fmt(due)}`, `DTEND:${fmt(end)}`,
+    `SUMMARY:${thing}`,
+    'DESCRIPTION:Reminder from Tolerate',
+    'BEGIN:VALARM', 'ACTION:DISPLAY', `DESCRIPTION:${thing}`, 'TRIGGER:-PT15M', 'END:VALARM',
+    'END:VEVENT', 'END:VCALENDAR',
+  ].join('\r\n');
+  const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+  const url  = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'reminder.ics';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  showToast('Opening in Calendar…');
+}
+
+function sendNotificationWithCalendar(thing, nextAt) {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  if (!navigator.serviceWorker?.controller) return;
+  navigator.serviceWorker.ready.then(reg => {
+    reg.showNotification('Reminder saved ✓', {
+      body: `"${thing}" — add to your calendar?`,
+      data: { thing, nextAt },
+      icon: './icon.svg', badge: './icon.svg',
+      actions: [
+        { action: 'calendar', title: '📅 Add to Calendar' },
+        { action: 'dismiss',  title: 'Got it' },
+      ],
+    });
+  });
 }
 
 // ─────────────────────────────────────────────
@@ -752,11 +865,46 @@ function _resetMicToggleUI() {
   if (status) status.textContent = 'Ready';
 }
 
+function _startHomeListening() {
+  if (_homeListening || _listeningActive) return;
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return;
+  _homeListening = true;
+  _listeningActive = true;
+  _listeningMode = 'home';
+  document.getElementById('home-listen-indicator')?.classList.remove('hidden');
+  runRecognition();
+}
+
+function _stopHomeListening() {
+  if (!_homeListening) return;
+  _homeListening = false;
+  if (_listeningMode === 'home') {
+    _listeningActive = false;
+    _listeningMode = null;
+    if (_micRecognition) { try { _micRecognition.stop(); } catch {} _micRecognition = null; }
+  }
+  document.getElementById('home-listen-indicator')?.classList.add('hidden');
+}
+
+function autoCaptureFromHome(thing) {
+  const reminder = createReminderObj({ thing, frequency: 'once', type: 'self' });
+  addReminder(reminder);
+  scheduleReminder(reminder);
+  _bannerCalendarData = { thing, nextAt: reminder.nextAt };
+  const tone = getState().user?.tone;
+  const name = getState().user?.name || 'there';
+  speak(`Got it, ${name}. Reminding you to ${thing}.`, tone);
+  showIncomingBanner(`"${thing}" — saved`, reminder.id, true);
+  sendNotificationWithCalendar(thing, reminder.nextAt);
+  renderRemindersPreview();
+}
+
 function toggleListening() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) { showToast('Speech recognition not supported in this browser'); return; }
 
-  if (_listeningActive) {
+  if (_listeningActive && _listeningMode === 'self-nag') {
     stopListening();
     document.getElementById('listen-area')?.classList.add('hidden');
     const btn = document.getElementById('mic-toggle-btn');
@@ -765,6 +913,9 @@ function toggleListening() {
       document.getElementById('mic-toggle-label').textContent = 'Use microphone';
     }
   } else {
+    // Stop home listener if running before starting self-nag
+    _stopHomeListening();
+    _listeningMode = 'self-nag';
     document.getElementById('listen-area')?.classList.remove('hidden');
     const btn = document.getElementById('mic-toggle-btn');
     if (btn) {
@@ -803,19 +954,26 @@ function runRecognition() {
       if (e.results[i].isFinal) final += t;
       else interim += t;
     }
+
+    if (_listeningMode === 'home') {
+      // Passive home mode — only capture trigger phrases, no transcript UI
+      if (final) {
+        const extracted = extractNagFromSpeech(final.toLowerCase());
+        if (extracted) autoCaptureFromHome(extracted);
+      }
+      return;
+    }
+
+    // self-nag mode — full transcript UI
     const display = final || interim;
     const el = document.getElementById('listen-transcript');
     if (el) el.textContent = display;
-
-    // Show/hide the manual save button based on whether there's content
     const saveBtn = document.getElementById('transcript-save-btn');
     if (saveBtn) saveBtn.classList.toggle('hidden', !display.trim());
-
     if (final) {
       const extracted = extractNagFromSpeech(final.toLowerCase());
       if (extracted) {
         autoCaptureReminder(extracted);
-        // Clear transcript and hide save button after auto-capture
         if (el) el.textContent = '';
         if (saveBtn) saveBtn.classList.add('hidden');
       }
@@ -839,7 +997,9 @@ function runRecognition() {
 
 function stopListening() {
   _listeningActive = false;
-  if (_micRecognition) { _micRecognition.stop(); _micRecognition = null; }
+  _homeListening = false;
+  _listeningMode = null;
+  if (_micRecognition) { try { _micRecognition.stop(); } catch {} _micRecognition = null; }
   if (_wakeLock) { _wakeLock.release?.(); _wakeLock = null; }
   setListenStatus('Ready', false);
   const btn = document.getElementById('mic-toggle-btn');
@@ -848,6 +1008,7 @@ function stopListening() {
     const lbl = document.getElementById('mic-toggle-label');
     if (lbl) lbl.textContent = 'Use microphone';
   }
+  document.getElementById('home-listen-indicator')?.classList.add('hidden');
 }
 
 function setListenStatus(text, active) {
@@ -1011,8 +1172,11 @@ function fireReminder(reminder) {
   const { user } = getState();
   const tone = user?.tone || 'straight';
   const name = user?.name || 'there';
+  // Always surface on home screen — no separate view
+  showView('home');
+  _bannerCalendarData = null;
+  showIncomingBanner(reminder.thing, reminder.id, false);
   sendNotification('Tolerate', reminder.thing, { checkId: reminder.id });
-  openReminderCheck(reminder.id);
   setTimeout(() => speak(`Hey ${name}! Quick reminder — ${reminder.thing}.`, tone), 400);
 }
 
@@ -1106,7 +1270,7 @@ function renderReminders() {
         <div class="reminder-actions">
           <button class="action-done" onclick="markDoneFromList('${r.id}')">✅ Done</button>
           <button class="action-snooze" onclick="snoozeFromList('${r.id}')">⏰ Snooze</button>
-          <button class="action-delete" onclick="deleteReminder('${r.id}')">✕</button>
+          <button class="action-delete" onclick="deleteReminder('${r.id}')"><i class="ph-bold ph-trash"></i> Delete</button>
         </div>` : `
         <div class="reminder-actions">
           <button class="action-delete" onclick="deleteReminder('${r.id}')">Remove</button>

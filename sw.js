@@ -1,4 +1,4 @@
-const CACHE = 'tolerate-v6';
+const CACHE = 'tolerate-v7';
 const ASSETS = ['./', './index.html', './styles.css', './app.js', './manifest.json', './icon.svg'];
 
 self.addEventListener('install', e => {
@@ -22,9 +22,17 @@ self.addEventListener('fetch', e => {
 self.addEventListener('notificationclick', e => {
   e.notification.close();
   const data = e.notification.data || {};
-  const url = data.checkId
-    ? `${self.location.origin}${self.location.pathname}?check=${data.checkId}`
-    : self.location.origin;
+
+  let url;
+  if (e.action === 'calendar') {
+    const thing = encodeURIComponent(data.thing || '');
+    url = `${self.location.origin}${self.location.pathname}?calendar=${thing}&at=${data.nextAt || ''}`;
+  } else {
+    url = data.checkId
+      ? `${self.location.origin}${self.location.pathname}?check=${data.checkId}`
+      : self.location.origin;
+  }
+
   e.waitUntil(
     clients.matchAll({ type: 'window' }).then(list => {
       for (const c of list) {

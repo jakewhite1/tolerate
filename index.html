@@ -135,45 +135,66 @@
   </div>
 
   <!-- ═══════════════════════════════════════
-       HOME — Main screen
+       HOME — Bento grid layout
   ════════════════════════════════════════ -->
   <div id="home" class="view">
-    <div class="view-content">
+    <div class="home-content">
 
-      <!-- Personality header — changes every visit -->
-      <div class="home-header">
-        <div class="home-name" id="home-name">Hey</div>
-        <div class="home-greeting" id="home-greeting"> </div>
+      <!-- Top bar: date + listening indicator -->
+      <div class="home-topbar">
+        <div class="home-date" id="home-date"></div>
+        <div class="home-listen-pill hidden" id="home-listen-indicator">
+          <span class="listen-pill-dot"></span>
+          <span>Listening</span>
+        </div>
       </div>
 
-      <!-- Two primary actions -->
-      <div class="home-actions">
-        <button class="btn-big btn-big-primary" onclick="showView('create-friend-nag')">
-          <div class="btn-big-icon"><i class="ph-bold ph-paper-plane-tilt"></i></div>
-          <div>
-            <span class="btn-big-label">Remind a Friend</span>
-            <span class="btn-big-sub">Send someone a nudge they can't ignore</span>
-          </div>
-        </button>
-        <button class="btn-big" onclick="showView('self-nag')">
-          <div class="btn-big-icon"><i class="ph-bold ph-microphone"></i></div>
-          <div>
-            <span class="btn-big-label">Remind Myself</span>
-            <span class="btn-big-sub">Just say it — we'll catch it</span>
-          </div>
+      <!-- Hero: big name + greeting | vertical tone dots -->
+      <div class="home-hero">
+        <div class="home-hero-text">
+          <div class="home-name" id="home-name">Hey</div>
+          <div class="home-greeting" id="home-greeting"> </div>
+        </div>
+        <div class="tone-switcher-compact">
+          <button class="tone-dot" data-tone="sarcastic" onclick="switchTone('sarcastic')" title="Sarcastic">🙄</button>
+          <button class="tone-dot" data-tone="warm"      onclick="switchTone('warm')"      title="Warm">🤗</button>
+          <button class="tone-dot" data-tone="brutal"    onclick="switchTone('brutal')"    title="Brutal">😤</button>
+          <button class="tone-dot" data-tone="straight"  onclick="switchTone('straight')"  title="Straight Up">📊</button>
+        </div>
+      </div>
+
+      <!-- Incoming reminder banner — hidden until a reminder fires -->
+      <div class="incoming-banner hidden" id="incoming-banner">
+        <div class="incoming-dot"></div>
+        <div class="incoming-content">
+          <div class="incoming-label" id="incoming-label">Reminder</div>
+          <div class="incoming-text"  id="incoming-text">…</div>
+        </div>
+        <div class="incoming-actions">
+          <button class="incoming-btn incoming-done"     onclick="bannerDone()">Done ✓</button>
+          <button class="incoming-btn incoming-calendar hidden" id="btn-banner-calendar"
+                  onclick="bannerCalendar()">📅 Calendar</button>
+          <button class="incoming-btn incoming-snooze"   onclick="bannerSnooze()">Later</button>
+        </div>
+        <button class="incoming-close" onclick="dismissIncomingBanner()">
+          <i class="ph-bold ph-x"></i>
         </button>
       </div>
 
-      <!-- Tone switcher -->
-      <div class="tone-switcher" style="margin-top:24px">
-        <button class="tone-pill" data-tone="sarcastic" onclick="switchTone('sarcastic')">🙄 Sarcastic</button>
-        <button class="tone-pill" data-tone="warm"      onclick="switchTone('warm')">🤗 Warm</button>
-        <button class="tone-pill" data-tone="brutal"    onclick="switchTone('brutal')">😤 Brutal</button>
-        <button class="tone-pill" data-tone="straight"  onclick="switchTone('straight')">📊 Straight</button>
+      <!-- Bento action grid -->
+      <div class="home-bento">
+        <button class="bento-card bento-primary" onclick="showView('create-friend-nag')">
+          <div class="bento-icon"><i class="ph-bold ph-paper-plane-tilt"></i></div>
+          <div class="bento-label">Remind<br>a Friend</div>
+        </button>
+        <button class="bento-card" onclick="showView('self-nag')">
+          <div class="bento-icon"><i class="ph-bold ph-microphone"></i></div>
+          <div class="bento-label">Remind<br>Myself</div>
+        </button>
       </div>
 
       <!-- Active reminders preview -->
-      <div id="reminders-preview" style="margin-top:28px"></div>
+      <div id="reminders-preview"></div>
 
       <!-- Install nudge — shown by JS when the browser offers an install prompt -->
       <div id="install-card" class="install-card hidden">
