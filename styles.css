@@ -890,16 +890,43 @@ p  { line-height: 1.55; }
 .wpane.active { display: block; }
 
 .name-input-wrap { position: relative; }
-.name-input-wrap .input-field { padding-right: 52px; }
-.name-contacts-btn {
-  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
-  background: none; border: none; padding: 8px;
-  color: var(--text-3); cursor: pointer; touch-action: manipulation;
-  transition: color 0.2s, transform 0.42s var(--spring);
-  display: flex; align-items: center;
+
+/* ── Contact permission prompt ── */
+.contact-perm-prompt {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; margin-top: 8px;
+  background: var(--primary-bg);
+  border: 1px solid rgba(151,193,170,0.35);
+  border-radius: 10px;
+  animation: banner-in 0.3s var(--spring) both;
 }
-.name-contacts-btn:active { color: var(--primary); transform: translateY(-50%) scale(0.84); }
-.name-contacts-btn .ph-bold { font-size: 22px; }
+.cpp-text { flex: 1; font-size: 13px; font-weight: 600; color: var(--text-2); }
+.cpp-no, .cpp-yes {
+  padding: 6px 14px; border-radius: 8px; border: none;
+  font-size: 13px; font-weight: 700; cursor: pointer; touch-action: manipulation;
+  transition: transform 0.3s var(--spring);
+}
+.cpp-no  { background: var(--surface-2); color: var(--text-2); }
+.cpp-yes { background: var(--primary); color: var(--text); }
+.cpp-no:active, .cpp-yes:active { transform: scale(0.9); transition: transform 0.06s; }
+
+/* ── Contact suggestions dropdown ── */
+.contact-suggestions {
+  margin-top: 4px; border-radius: 12px; overflow: hidden;
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--neu-up);
+  background: var(--glass);
+}
+.contact-suggestion-item {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  width: 100%; padding: 12px 16px; border: none; border-bottom: 1px solid var(--glass-border);
+  background: none; text-align: left; cursor: pointer; touch-action: manipulation;
+  transition: background 0.15s;
+}
+.contact-suggestion-item:last-child { border-bottom: none; }
+.contact-suggestion-item:active { background: var(--primary-bg); }
+.csi-name  { font-size: 14px; font-weight: 700; color: var(--text); }
+.csi-phone { font-size: 12px; color: var(--text-3); white-space: nowrap; }
 
 .example-chips-wrap { margin-top: 16px; }
 .examples-label {

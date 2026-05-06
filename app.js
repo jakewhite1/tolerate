@@ -385,11 +385,6 @@ document.addEventListener('DOMContentLoaded', () => {
   registerSW();
   checkScheduledReminders();
 
-  // Show contact picker button only where the API is actually supported
-  if ('contacts' in navigator && 'ContactsManager' in window) {
-    document.getElementById('contact-picker-btn')?.classList.remove('hidden');
-  }
-
   // If already installed as PWA, hide install card
   if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
     document.getElementById('install-card')?.classList.add('hidden');
@@ -722,19 +717,98 @@ function generateNag() {
   showView('share-nag');
 }
 
-async function pickContact() {
-  if (!('contacts' in navigator && 'ContactsManager' in window)) return;
-  try {
-    const contacts = await navigator.contacts.select(['name', 'tel'], { multiple: false });
-    if (!contacts.length) return;
-    const c = contacts[0];
-    const name  = c.name?.[0]  || '';
-    const phone = c.tel?.[0]   || '';
-    document.getElementById('nag-contact').value = name || phone;
-    _currentNagPhone = phone;
-  } catch {
-    showToast('Could not open contacts');
+// ─────────────────────────────────────────────
+// CONTACT AUTOCOMPLETE
+// ─────────────────────────────────────────────
+let _contacts = [];
+let _contactsLoaded = false;
+let _contactsDenied = !!localStorage.getItem('contacts_denied');
+
+function _onContactInput(val) {
+  _currentNagPhone = '';
+  if (!val) { _hideContactSuggestions(); return; }
+
+  const hasAPI = 'contacts' in navigator && 'ContactsManager' in window;
+
+  if (!_contactsLoaded && !_contactsDenied && hasAPI) {
+    _showContactPermPrompt();
   }
+
+  if (_contactsLoaded) _renderContactSuggestions(val);
+}
+
+function _showContactPermPrompt() {
+  if (document.getElementById('contact-perm-prompt')) return;
+  const wrap = document.querySelector('.name-input-wrap');
+  if (!wrap) return;
+  const el = document.createElement('div');
+  el.id = 'contact-perm-prompt';
+  el.className = 'contact-perm-prompt';
+  el.innerHTML = `
+    <span class="cpp-text">Suggest contacts as you type?</span>
+    <button class="cpp-no"  onclick="denyContacts()">No</button>
+    <button class="cpp-yes" onclick="allowContacts()">Yes</button>
+  `;
+  wrap.after(el);
+}
+
+function denyContacts() {
+  _contactsDenied = true;
+  localStorage.setItem('contacts_denied', '1');
+  document.getElementById('contact-perm-prompt')?.remove();
+}
+
+async function allowContacts() {
+  document.getElementById('contact-perm-prompt')?.remove();
+  try {
+    const picked = await navigator.contacts.select(['name', 'tel'], { multiple: true });
+    _contacts = picked
+      .filter(c => c.name?.[0] || c.tel?.[0])
+      .map(c => ({ name: c.name?.[0] || '', phone: (c.tel?.[0] || '').trim() }));
+    _contactsLoaded = true;
+    const val = document.getElementById('nag-contact')?.value || '';
+    if (val) _renderContactSuggestions(val);
+  } catch {
+    showToast('Could not load contacts');
+  }
+}
+
+function _renderContactSuggestions(query) {
+  if (!_contacts.length) return;
+  const q = query.toLowerCase();
+  const matches = _contacts
+    .filter(c => c.name.toLowerCase().includes(q) || c.phone.includes(q))
+    .slice(0, 6);
+
+  let el = document.getElementById('contact-suggestions');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'contact-suggestions';
+    el.className = 'contact-suggestions';
+    document.querySelector('.name-input-wrap')?.after(el);
+  }
+
+  if (!matches.length) { el.innerHTML = ''; return; }
+  el.innerHTML = matches.map(c => `
+    <button class="contact-suggestion-item"
+      onclick="selectContactSuggestion(${JSON.stringify(c.name)},${JSON.stringify(c.phone)})">
+      <span class="csi-name">${esc(c.name || c.phone)}</span>
+      ${c.phone ? `<span class="csi-phone">${esc(c.phone)}</span>` : ''}
+    </button>
+  `).join('');
+}
+
+function _hideContactSuggestions() {
+  const el = document.getElementById('contact-suggestions');
+  if (el) el.innerHTML = '';
+}
+
+function selectContactSuggestion(name, phone) {
+  const input = document.getElementById('nag-contact');
+  if (input) input.value = name || phone;
+  _currentNagPhone = phone;
+  _hideContactSuggestions();
+  input?.focus();
 }
 
 function textFriend() {

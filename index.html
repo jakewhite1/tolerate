@@ -217,13 +217,10 @@
         <div class="name-input-wrap">
           <input type="text" id="nag-contact" class="input-field"
             placeholder="Name or phone number"
-            autocomplete="name"
-            oninput="_currentNagPhone=''">
-          <!-- shown via JS only if Contact Picker API is available -->
-          <button class="name-contacts-btn hidden" id="contact-picker-btn" onclick="pickContact()" title="Pick from contacts">
-            <i class="ph-bold ph-address-book"></i>
-          </button>
+            autocomplete="off"
+            oninput="_onContactInput(this.value)">
         </div>
+        <!-- permission prompt & suggestions injected here by JS -->
       </div>
 
       <div class="form-section">
